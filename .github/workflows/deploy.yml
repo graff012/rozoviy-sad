@@ -1,5 +1,5 @@
 
-name: Deploy to server
+name: Deploy to Server
 on:
   push:
     branches:
