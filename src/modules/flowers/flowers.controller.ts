@@ -9,8 +9,6 @@ import {
   Put,
   UseInterceptors,
   UploadedFile,
-  Res,
-  Request,
 } from '@nestjs/common';
 import { FlowersService } from './flowers.service';
 import { CreateFlowerDto } from './dto/create-flower.dto';
@@ -21,8 +19,6 @@ import { Roles } from '../../common/decorators/roles.decorator';
 import { diskStorage } from 'multer';
 import { extname, join } from 'path';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { existsSync } from 'fs';
-import { Response } from 'express';
 
 // Interface for the like response
 interface LikeResponse {

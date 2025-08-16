@@ -3,7 +3,6 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
   Delete,
   UseGuards,
@@ -13,8 +12,8 @@ import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { AuthGuard } from '../../common/guards/auth.guard';
-import { Roles } from 'src/common/decorators/roles.decorator';
-import { RoleGuard } from 'src/common/guards/role.guard';
+import { Roles } from './../../common/decorators/roles.decorator';
+import { RoleGuard } from './../../common/guards/role.guard';
 
 @Controller('orders')
 export class OrdersController {

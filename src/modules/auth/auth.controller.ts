@@ -11,16 +11,12 @@ import {
 import { LoginDto, RegisterDto } from './dto/create-auth.dto';
 import { Request, Response } from 'express';
 import { Public } from '../../common/decorators/public.decorator';
-import { PrismaService } from '../../core/database/prisma.service';
-import { AuthGuard } from 'src/common/guards/auth.guard';
+import { AuthGuard } from './../../common/guards/auth.guard';
 
 @Public()
 @Controller('auth')
 export class AuthController {
-  constructor(
-    private readonly authService: AuthService,
-    private readonly prismaService: PrismaService,
-  ) {}
+  constructor(private readonly authService: AuthService) {}
 
   @UseGuards(AuthGuard)
   @Get('check')
@@ -44,7 +40,7 @@ export class AuthController {
   @Post('login')
   async login(
     @Body() loginDto: LoginDto,
-    @Res({ passthrough: true }) response: Response,
+    @Res({ passthrough: true }) response: Response
   ) {
     const { token, message } = await this.authService.login(loginDto);
 

@@ -43,13 +43,17 @@ export class UsersService {
     }
 
     const updateData: any = {};
-    
+
     // Only include fields that are provided in the DTO
-    if (updateUserDto.first_name !== undefined) updateData.first_name = updateUserDto.first_name;
-    if (updateUserDto.last_name !== undefined) updateData.last_name = updateUserDto.last_name;
-    if (updateUserDto.phone_number !== undefined) updateData.phone_number = updateUserDto.phone_number;
-    if (updateUserDto.password !== undefined) updateData.password = updateUserDto.password;
-    
+    if (updateUserDto.first_name !== undefined)
+      updateData.first_name = updateUserDto.first_name;
+    if (updateUserDto.last_name !== undefined)
+      updateData.last_name = updateUserDto.last_name;
+    if (updateUserDto.phone_number !== undefined)
+      updateData.phone_number = updateUserDto.phone_number;
+    if (updateUserDto.password !== undefined)
+      updateData.password = updateUserDto.password;
+
     // Always update the updated_at timestamp
     updateData.updated_at = new Date();
 

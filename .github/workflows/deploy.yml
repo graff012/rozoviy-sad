@@ -1,0 +1,37 @@
+
+name: Deploy to server
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deployment:
+    runs-on: ubuntu-latest
+    env:
+      SERVER_HOST: ${{secrets.SERVER_HOST}}
+      SERVER_USER: ${{secrets.SERVER_USER}}
+      SSH_KEY: ${{secrets.SSH_SECRET_KEY}}
+    steps:
+      
+      - name: write SSH key
+        run: |
+          printf '%s\n' "$SSH_KEY" > ssh_key.pem
+          chmod 600 ssh_key.pem
+
+      - name: Deploy to WebServer 
+        run: |
+          ssh -i ssh_key.pem -o StrictHostKeyChecking=no "$SERVER_USER@$SERVER_HOST" <<'EOF'
+          set -e 
+          REPO_DIR=/home/ubuntu/app
+          if [ ! -d "$REPO_DIR/.git" ]; then
+            git clone https://github.com/graff012/rozoviy-sad.git "$REPO_DIR"
+          fi
+          cd "$REPO_DIR"
+          git pull origin main 
+          sudo docker compose down 
+          sudo docker compose up -d --build 
+          EOF
+        
+      - name: Clean up SSH key 
+        run: rm ssh_key.pem
