@@ -21,6 +21,7 @@ jobs:
           ADMIN_SURNAME: ${{ secrets.ADMIN_SURNAME }}
           ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
           ADMIN_PHONE_NUMBER: ${{ secrets.ADMIN_PHONE_NUMBER }}
+          DATABASE_DOCKER_URL: ${{ secrets.DATABASE_DOCKER_URL }}
         run: |
           # Write SSH key
           mkdir -p ~/.ssh
@@ -32,7 +33,7 @@ jobs:
           DATABASE_USER=$DATABASE_USER
           DATABASE_PASSWORD=$DATABASE_PASSWORD
           DATABASE_DB=$DATABASE_DB
-          DATABASE_DOCKER_URL=postgresql://$DATABASE_USER:$DATABASE_PASSWORD@postgres:5432/$DATABASE_DB?schema=public
+          DATABASE_DOCKER_URL=DATABASE_DOCKER_URL
           REDIS_HOST=redis
           REDIS_PORT=6379
           JWT_KEY=$JWT_KEY
