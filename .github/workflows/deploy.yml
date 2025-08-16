@@ -14,24 +14,23 @@ jobs:
     steps:
       - name: Write SSH Key
         run: |
-          printf '%s\n' "$SSH_KEY" > ssh_key.pem
-          chmod 600 ssh_key.pem
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
 
       - name: Deploy to EC2
         run: |
-          ssh -i ssh_key.pem -o StrictHostKeyChecking=no "$SERVER_USER@$SERVER_HOST" << 'EOF'
-set -e
-REPO_DIR=/home/ubuntu/app
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} '
+          set -e
+          REPO_DIR=/home/ubuntu/app
+          if [ ! -d "$REPO_DIR/.git" ]; then
+            git clone https://github.com/graff012/rozoviy-sad.git "$REPO_DIR"
+          fi
+          cd "$REPO_DIR"
+          git pull origin main
 
-if [ ! -d "$REPO_DIR/.git" ]; then
-  git clone https://github.com/graff012/rozoviy-sad.git "$REPO_DIR"
-fi
-
-cd "$REPO_DIR"
-git pull origin main
-
-# Create .env file
-cat > .env << 'EOL'
+          # Create .env file
+          cat > .env << "EOL"
 DATABASE_USER=${{ secrets.DATABASE_USER }}
 DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }}
 DATABASE_DB=${{ secrets.DATABASE_DB }}
@@ -46,10 +45,11 @@ ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}
 ADMIN_PHONE_NUMBER=${{ secrets.ADMIN_PHONE_NUMBER }}
 EOL
 
-# Restart services
-sudo docker compose down || true
-sudo docker compose up -d --build
-EOF
+          # Restart app
+          sudo docker compose down || true
+          sudo docker compose up -d --build
+          '
+        shell: bash
 
       - name: Clean up SSH key
-        run: rm ssh_key.pem
+        run: rm -f ~/.ssh/id_rsa
