@@ -1,4 +1,3 @@
-
 name: Deploy to Server
 on:
   push:
@@ -9,29 +8,49 @@ jobs:
   deployment:
     runs-on: ubuntu-latest
     env:
-      SERVER_HOST: ${{secrets.SERVER_HOST}}
-      SERVER_USER: ${{secrets.SERVER_USER}}
-      SSH_KEY: ${{secrets.SSH_SECRET_KEY}}
+      SERVER_HOST: ${{ secrets.SERVER_HOST }}
+      SERVER_USER: ${{ secrets.SERVER_USER }}
+      SSH_KEY: ${{ secrets.SSH_SECRET_KEY }}
     steps:
-      
-      - name: write SSH key
+      - name: Write SSH Key
         run: |
           printf '%s\n' "$SSH_KEY" > ssh_key.pem
           chmod 600 ssh_key.pem
 
-      - name: Deploy to WebServer 
+      - name: Deploy to EC2
         run: |
-          ssh -i ssh_key.pem -o StrictHostKeyChecking=no "$SERVER_USER@$SERVER_HOST" <<'EOF'
-          set -e 
+          ssh -i ssh_key.pem -o StrictHostKeyChecking=no "$SERVER_USER@$SERVER_HOST" << 'EOF'
+          set -e
           REPO_DIR=/home/ubuntu/app
+
+          # Clone if not exists
           if [ ! -d "$REPO_DIR/.git" ]; then
             git clone https://github.com/graff012/rozoviy-sad.git "$REPO_DIR"
           fi
+
           cd "$REPO_DIR"
-          git pull origin main 
-          sudo docker compose down 
-          sudo docker compose up -d --build 
+          git pull origin main
+
+          # ✅ Create .env file on EC2 server
+          cat > .env << 'INNER_EOF'
+DATABASE_USER=${{ secrets.DATABASE_USER }}
+DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }}
+DATABASE_DB=${{ secrets.DATABASE_DB }}
+DATABASE_DOCKER_URL=postgresql://${{ secrets.DATABASE_USER }}:${{ secrets.DATABASE_PASSWORD }}@postgres:5432/${{ secrets.DATABASE_DB }}?schema=public
+REDIS_HOST=redis
+REDIS_PORT=6379
+JWT_KEY=${{ secrets.JWT_KEY }}
+ESKIZ_EMAIL=${{ secrets.ESKIZ_EMAIL }}
+ESKIZ_PASSWORD=${{ secrets.ESKIZ_PASSWORD }}
+ADMIN_SURNAME=${{ secrets.ADMIN_SURNAME }}
+ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}
+ADMIN_PHONE_NUMBER=${{ secrets.ADMIN_PHONE_NUMBER }}
+INNER_EOF
+
+          # Build and start
+          sudo docker compose down || true
+          sudo docker compose up -d --build
           EOF
-        
-      - name: Clean up SSH key 
-        run: rm ssh_key.pem
+
+      - name: Clean up SSH key
+        run: rm ssh_key.pem       run: rm ssh_key.pem
