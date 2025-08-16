@@ -20,19 +20,18 @@ jobs:
       - name: Deploy to EC2
         run: |
           ssh -i ssh_key.pem -o StrictHostKeyChecking=no "$SERVER_USER@$SERVER_HOST" << 'EOF'
-          set -e
-          REPO_DIR=/home/ubuntu/app
+set -e
+REPO_DIR=/home/ubuntu/app
 
-          # Clone if not exists
-          if [ ! -d "$REPO_DIR/.git" ]; then
-            git clone https://github.com/graff012/rozoviy-sad.git "$REPO_DIR"
-          fi
+if [ ! -d "$REPO_DIR/.git" ]; then
+  git clone https://github.com/graff012/rozoviy-sad.git "$REPO_DIR"
+fi
 
-          cd "$REPO_DIR"
-          git pull origin main
+cd "$REPO_DIR"
+git pull origin main
 
-          # ✅ Create .env file on EC2 server
-          cat > .env << 'INNER_EOF'
+# Create .env file
+cat > .env << 'EOL'
 DATABASE_USER=${{ secrets.DATABASE_USER }}
 DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }}
 DATABASE_DB=${{ secrets.DATABASE_DB }}
@@ -45,12 +44,12 @@ ESKIZ_PASSWORD=${{ secrets.ESKIZ_PASSWORD }}
 ADMIN_SURNAME=${{ secrets.ADMIN_SURNAME }}
 ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}
 ADMIN_PHONE_NUMBER=${{ secrets.ADMIN_PHONE_NUMBER }}
-INNER_EOF
+EOL
 
-          # Build and start
-          sudo docker compose down || true
-          sudo docker compose up -d --build
-          EOF
+# Restart services
+sudo docker compose down || true
+sudo docker compose up -d --build
+EOF
 
       - name: Clean up SSH key
-        run: rm ssh_key.pem       run: rm ssh_key.pem
+        run: rm ssh_key.pem
