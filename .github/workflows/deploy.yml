@@ -27,8 +27,24 @@ jobs:
           printf '%s\n' "$SSH_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           
+          # Create .env file locally first
+          cat > .env << EOF
+          DATABASE_USER=$DATABASE_USER
+          DATABASE_PASSWORD=$DATABASE_PASSWORD
+          DATABASE_DB=$DATABASE_DB
+          DATABASE_DOCKER_URL=postgresql://$DATABASE_USER:$DATABASE_PASSWORD@postgres:5432/$DATABASE_DB?schema=public
+          REDIS_HOST=redis
+          REDIS_PORT=6379
+          JWT_KEY=$JWT_KEY
+          ESKIZ_EMAIL=$ESKIZ_EMAIL
+          ESKIZ_PASSWORD=$ESKIZ_PASSWORD
+          ADMIN_SURNAME=$ADMIN_SURNAME
+          ADMIN_PASSWORD=$ADMIN_PASSWORD
+          ADMIN_PHONE_NUMBER=$ADMIN_PHONE_NUMBER
+          EOF
+          
           # Deploy via SSH
-          ssh -o StrictHostKeyChecking=no "$SERVER_USER@$SERVER_HOST" << 'ENDSSH'
+          ssh -o StrictHostKeyChecking=no "$SERVER_USER@$SERVER_HOST" '
           set -e
           REPO_DIR=/home/ubuntu/app
           
@@ -38,27 +54,17 @@ jobs:
           fi
           cd "$REPO_DIR"
           git pull origin main
+          '
           
-          # Create .env file with environment variables
-          cat > .env << EOF
-DATABASE_USER=${DATABASE_USER}
-DATABASE_PASSWORD=${DATABASE_PASSWORD}
-DATABASE_DB=${DATABASE_DB}
-DATABASE_DOCKER_URL=postgresql://${DATABASE_USER}:${DATABASE_PASSWORD}@postgres:5432/${DATABASE_DB}?schema=public
-REDIS_HOST=redis
-REDIS_PORT=6379
-JWT_KEY=${JWT_KEY}
-ESKIZ_EMAIL=${ESKIZ_EMAIL}
-ESKIZ_PASSWORD=${ESKIZ_PASSWORD}
-ADMIN_SURNAME=${ADMIN_SURNAME}
-ADMIN_PASSWORD=${ADMIN_PASSWORD}
-ADMIN_PHONE_NUMBER=${ADMIN_PHONE_NUMBER}
-EOF
+          # Copy .env file to server
+          scp -o StrictHostKeyChecking=no .env "$SERVER_USER@$SERVER_HOST:/home/ubuntu/app/.env"
           
-          # Restart app
+          # Restart services on server
+          ssh -o StrictHostKeyChecking=no "$SERVER_USER@$SERVER_HOST" '
+          cd /home/ubuntu/app
           sudo docker compose down || true
           sudo docker compose up -d --build
-ENDSSH
+          '
           
       - name: Clean up SSH key
         run: rm -f ~/.ssh/id_rsa
