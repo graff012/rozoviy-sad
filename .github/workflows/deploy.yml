@@ -21,6 +21,8 @@ jobs:
           ADMIN_SURNAME: ${{ secrets.ADMIN_SURNAME }}
           ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
           ADMIN_PHONE_NUMBER: ${{ secrets.ADMIN_PHONE_NUMBER }}
+          ADMIN_NAME: ${{ secrets.ADMIN_NAME }}
+          ADMIN_ROLE: ${{ secrets.ADMIN_ROLE }}
           DATABASE_DOCKER_URL: ${{ secrets.DATABASE_DOCKER_URL }}
         run: |
           # Write SSH key
@@ -40,6 +42,8 @@ jobs:
           ESKIZ_EMAIL=$ESKIZ_EMAIL
           ESKIZ_PASSWORD=$ESKIZ_PASSWORD
           ADMIN_SURNAME=$ADMIN_SURNAME
+          ADMIN_NAME=$ADMIN_NAME
+          ADMIN_ROLE=$ADMIN_ROLE
           ADMIN_PASSWORD=$ADMIN_PASSWORD
           ADMIN_PHONE_NUMBER=$ADMIN_PHONE_NUMBER
           EOF
