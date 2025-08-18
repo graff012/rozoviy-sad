@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { CreateFlowerDto } from './dto/create-flower.dto';
 import { UpdateFlowerDto } from './dto/update-flower.dto';
 import { PrismaService } from '../../core/database/prisma.service';
@@ -15,7 +19,7 @@ export class FlowersService {
   constructor(private readonly prismaService: PrismaService) {}
   async create(createFlowerDto: CreateFlowerDto) {
     const { category_id, ...flowerData } = createFlowerDto;
-    
+
     const flower = await this.prismaService.flower.create({
       data: {
         name: flowerData.name,
@@ -25,8 +29,8 @@ export class FlowersService {
         price: flowerData.price,
         img_url: flowerData.img_url,
         category: {
-          connect: { id: category_id }
-        }
+          connect: { id: category_id },
+        },
       },
       include: {
         category: true,
@@ -41,65 +45,68 @@ export class FlowersService {
 
   async findAll(userId?: string) {
     console.log('Fetching flowers for user:', userId);
-    
+
     try {
       const flowers = await this.prismaService.flower.findMany({
         include: {
           liked_by: {
             where: userId ? { user_id: userId } : undefined,
-            select: { user_id: true }
+            select: { user_id: true },
           },
-          category: true
-        }
+          category: true,
+        },
       });
 
       console.log(`Found ${flowers.length} flowers`);
-      
+
       if (!flowers || flowers.length === 0) {
         console.log('No flowers found in the database');
         return [];
       }
 
       // Process each flower
-      const processedFlowers = flowers.map(flower => {
+      const processedFlowers = flowers.map((flower) => {
         const isLiked = flower.liked_by && flower.liked_by.length > 0;
         const { liked_by, ...flowerData } = flower;
-        
-        // Log the original image URL for debugging
-        console.log(`Processing flower ${flower.id} - Original img_url:`, flower.img_url);
-        
+
         // Process the image URL
         let imgUrl = flower.img_url || '';
-        
+
         // If it's a relative path starting with /images/ or /public/images/
         if (imgUrl.startsWith('/public/images/')) {
           imgUrl = imgUrl.replace('/public', ''); // Convert to /images/...
-        }
-        else if (imgUrl.startsWith('/images/')) {
+        } else if (imgUrl.startsWith('/images/')) {
           // Keep as is, but remove leading slash
           imgUrl = imgUrl.substring(1);
         }
         // If it's just a filename, prepend images/
-        else if (imgUrl && !imgUrl.includes('/') && !imgUrl.startsWith('http')) {
+        else if (
+          imgUrl &&
+          !imgUrl.includes('/') &&
+          !imgUrl.startsWith('http')
+        ) {
           imgUrl = `images/${imgUrl}`;
         }
-        
+
         // Ensure the path is clean (no double slashes)
         imgUrl = imgUrl.replace(/([^:]\/)\/+/g, '$1');
-        
+
         const processedFlower = {
           ...flowerData,
           isLiked,
           // Return the relative path without leading slash
           img_url: imgUrl || null,
           // For backward compatibility
-          imgUrl: imgUrl || null
+          imgUrl: imgUrl || null,
         };
-        
-        console.log(`Processed flower ${flower.id} - Final img_url:`, processedFlower.img_url);
+
+        console.log(
+          `Processed flower ${flower.id} - Final img_url:`,
+          processedFlower.img_url
+        );
         return processedFlower;
       });
-      
+
       return processedFlowers;
     } catch (error) {
       console.error('Error in flowersService.findAll:', error);
@@ -126,15 +133,22 @@ export class FlowersService {
 
     // Convert DTO to database fields
     const updateData: any = {};
-    
-    if (updateFlowerDto.name !== undefined) updateData.name = updateFlowerDto.name;
-    if (updateFlowerDto.smell !== undefined) updateData.smell = updateFlowerDto.smell;
-    if (updateFlowerDto.flower_size !== undefined) updateData.flower_size = updateFlowerDto.flower_size;
-    if (updateFlowerDto.height !== undefined) updateData.height = updateFlowerDto.height;
-    if (updateFlowerDto.price !== undefined) updateData.price = updateFlowerDto.price;
-    if (updateFlowerDto.img_url !== undefined) updateData.img_url = updateFlowerDto.img_url;
-    if (updateFlowerDto.category_id !== undefined) updateData.category_id = updateFlowerDto.category_id;
-    
+
+    if (updateFlowerDto.name !== undefined)
+      updateData.name = updateFlowerDto.name;
+    if (updateFlowerDto.smell !== undefined)
+      updateData.smell = updateFlowerDto.smell;
+    if (updateFlowerDto.flower_size !== undefined)
+      updateData.flower_size = updateFlowerDto.flower_size;
+    if (updateFlowerDto.height !== undefined)
+      updateData.height = updateFlowerDto.height;
+    if (updateFlowerDto.price !== undefined)
+      updateData.price = updateFlowerDto.price;
+    if (updateFlowerDto.img_url !== undefined)
+      updateData.img_url = updateFlowerDto.img_url;
+    if (updateFlowerDto.category_id !== undefined)
+      updateData.category_id = updateFlowerDto.category_id;
+
     // Always update the updated_at timestamp
     updateData.updated_at = new Date();
 
@@ -166,7 +180,10 @@ export class FlowersService {
     }
   }
 
-  async toggleLike(flowerId: string, userId: string): Promise<ToggleLikeResult> {
+  async toggleLike(
+    flowerId: string,
+    userId: string
+  ): Promise<ToggleLikeResult> {
     // Check if flower exists
     const flower = await this.prismaService.flower.findUnique({
       where: { id: flowerId },
