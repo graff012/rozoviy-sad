@@ -5,8 +5,9 @@ export class CreateFlowerDto {
   @IsString()
   name: string;
 
-  @IsEnum(['weak', 'average', 'strong', 'very_strong'])
-  @Transform(({ value }) => value?.toUpperCase())
+  // @IsEnum(['weak', 'average', 'strong', 'very_strong'])
+  // @Transform(({ value }) => value?.toUpperCase())
+  @IsString()
   smell: string;
 
   @IsString()
