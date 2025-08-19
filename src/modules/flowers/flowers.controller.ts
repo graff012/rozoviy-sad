@@ -54,7 +54,7 @@ export class FlowersController {
   @UseInterceptors(FileInterceptor('image', { storage }))
   async create(
     @Body() createFlowerDto: CreateFlowerDto,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile() file: Express.Multer.File
   ) {
     // console.log('=== CREATE FLOWER DEBUG ===');
     // console.log('Raw request body keys:', Object.keys(createFlowerDto || {}));
@@ -79,7 +79,7 @@ export class FlowersController {
 
     if (file) {
       // Save the image url ('images/filename.jpg')
-      createFlowerDto.img_url = `/images/${file.filename}`;
+      createFlowerDto.imgUrl = `/images/${file.filename}`;
     }
 
     const { flower, message } =
@@ -117,7 +117,7 @@ export class FlowersController {
   @Get('test-like/:flowerId/:userId')
   async testLike(
     @Param('flowerId') flowerId: string,
-    @Param('userId') userId: string,
+    @Param('userId') userId: string
   ) {
     try {
       const result = await this.flowersService.toggleLike(flowerId, userId);
@@ -142,7 +142,7 @@ export class FlowersController {
   // @UseGuards(AuthGuard)
   async toggleLike(
     @Param('id') id: string,
-    @Body() body: { userId: string },
+    @Body() body: { userId: string }
   ): Promise<LikeResponse> {
     try {
       const result = await this.flowersService.toggleLike(id, body.userId);
@@ -172,10 +172,10 @@ export class FlowersController {
   async update(
     @Param('id') id: string,
     @Body() updateFlowerDto: UpdateFlowerDto,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile() file: Express.Multer.File
   ) {
     if (file) {
-      updateFlowerDto.img_url = `/images/${file.filename}`;
+      updateFlowerDto.imgUrl = `/images/${file.filename}`;
     }
     return await this.flowersService.update(id, updateFlowerDto);
   }

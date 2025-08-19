@@ -7,7 +7,7 @@ import { CreateFlowerDto } from './dto/create-flower.dto';
 import { UpdateFlowerDto } from './dto/update-flower.dto';
 import { PrismaService } from '../../core/database/prisma.service';
 import { plainToInstance } from 'class-transformer';
-import { Prisma, Role } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 
 interface ToggleLikeResult {
   message: string;
@@ -18,18 +18,19 @@ interface ToggleLikeResult {
 export class FlowersService {
   constructor(private readonly prismaService: PrismaService) {}
   async create(createFlowerDto: CreateFlowerDto) {
-    const { category_id, ...flowerData } = createFlowerDto;
+    const { categoryId, ...flowerData } = createFlowerDto;
 
     const flower = await this.prismaService.flower.create({
       data: {
         name: flowerData.name,
         smell: flowerData.smell,
-        flower_size: flowerData.flower_size,
+        // prisma user snake case
+        flower_size: flowerData.flowerSize,
         height: flowerData.height,
         price: flowerData.price,
-        img_url: flowerData.img_url,
+        img_url: flowerData.imgUrl,
         category: {
-          connect: { id: category_id },
+          connect: { id: categoryId },
         },
       },
       include: {
@@ -102,7 +103,7 @@ export class FlowersService {
 
         console.log(
           `Processed flower ${flower.id} - Final img_url:`,
-          processedFlower.img_url
+          processedFlower.img_url,
         );
         return processedFlower;
       });
@@ -138,16 +139,16 @@ export class FlowersService {
       updateData.name = updateFlowerDto.name;
     if (updateFlowerDto.smell !== undefined)
       updateData.smell = updateFlowerDto.smell;
-    if (updateFlowerDto.flower_size !== undefined)
-      updateData.flower_size = updateFlowerDto.flower_size;
+    if (updateFlowerDto.flowerSize !== undefined)
+      updateData.flower_size = updateFlowerDto.flowerSize;
     if (updateFlowerDto.height !== undefined)
       updateData.height = updateFlowerDto.height;
     if (updateFlowerDto.price !== undefined)
       updateData.price = updateFlowerDto.price;
-    if (updateFlowerDto.img_url !== undefined)
-      updateData.img_url = updateFlowerDto.img_url;
-    if (updateFlowerDto.category_id !== undefined)
-      updateData.category_id = updateFlowerDto.category_id;
+    if (updateFlowerDto.imgUrl !== undefined)
+      updateData.imgUrl = updateFlowerDto.img_url;
+    if (updateFlowerDto.categoryId !== undefined)
+      updateData.categoryId = updateFlowerDto.categoryId;
 
     // Always update the updated_at timestamp
     updateData.updated_at = new Date();
@@ -182,7 +183,7 @@ export class FlowersService {
 
   async toggleLike(
     flowerId: string,
-    userId: string
+    userId: string,
   ): Promise<ToggleLikeResult> {
     // Check if flower exists
     const flower = await this.prismaService.flower.findUnique({

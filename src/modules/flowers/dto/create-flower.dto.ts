@@ -12,18 +12,18 @@ export class CreateFlowerDto {
 
   @IsString()
   @Transform(({ value }) => value || '')
-  flower_size: string;
+  flowerSize: string;
 
   @IsString()
   height: string;
 
   @IsString()
   @IsOptional()
-  img_url?: string;
+  imgUrl?: string;
 
   @IsString()
   price: string;
 
   @IsString()
-  category_id: string;
+  categoryId: string;
 }

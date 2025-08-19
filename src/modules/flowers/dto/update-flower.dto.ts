@@ -14,7 +14,7 @@ export class UpdateFlowerDto {
   @IsString()
   @IsOptional()
   @Transform(({ value }) => value || '')
-  flower_size?: string;
+  flowerSize?: string;
 
   @IsString()
   @IsOptional()
@@ -26,9 +26,9 @@ export class UpdateFlowerDto {
 
   @IsString()
   @IsOptional()
-  img_url?: string;
+  imgUrl?: string;
 
   @IsString()
   @IsOptional()
-  category_id?: string;
+  categoryId?: string;
 }
