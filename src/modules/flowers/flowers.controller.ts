@@ -18,7 +18,7 @@ import { RoleGuard } from '../../common/guards/role.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { diskStorage } from 'multer';
 import { extname, join } from 'path';
-import { existsSync, mkdirSync() } from 'fs';
+import { existsSync, mkdirSync } from 'fs';
 import { FileInterceptor } from '@nestjs/platform-express';
 
 // Interface for the like response
@@ -66,7 +66,7 @@ export class FlowersController {
   @UseInterceptors(FileInterceptor('image', { storage }))
   async create(
     @Body() createFlowerDto: CreateFlowerDto,
-    @UploadedFile() file: Express.Multer.File
+    @UploadedFile() file: Express.Multer.File,
   ) {
     console.log('=== CREATE FLOWER DEBUG ===');
     console.log('Received DTO:', createFlowerDto);
@@ -113,7 +113,7 @@ export class FlowersController {
   @Get('test-like/:flowerId/:userId')
   async testLike(
     @Param('flowerId') flowerId: string,
-    @Param('userId') userId: string
+    @Param('userId') userId: string,
   ) {
     try {
       const result = await this.flowersService.toggleLike(flowerId, userId);
@@ -138,7 +138,7 @@ export class FlowersController {
   // @UseGuards(AuthGuard)
   async toggleLike(
     @Param('id') id: string,
-    @Body() body: { userId: string }
+    @Body() body: { userId: string },
   ): Promise<LikeResponse> {
     try {
       const result = await this.flowersService.toggleLike(id, body.userId);
@@ -168,7 +168,7 @@ export class FlowersController {
   async update(
     @Param('id') id: string,
     @Body() updateFlowerDto: UpdateFlowerDto,
-    @UploadedFile() file: Express.Multer.File
+    @UploadedFile() file: Express.Multer.File,
   ) {
     if (file) {
       updateFlowerDto.imgUrl = `/images/${file.filename}`;
