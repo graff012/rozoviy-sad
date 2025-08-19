@@ -1,13 +1,13 @@
-import { IsEnum, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsOptional, IsString, IsNotEmpty } from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export class CreateFlowerDto {
   @IsString()
+  @IsNotEmpty()
   name: string;
 
-  // @IsEnum(['weak', 'average', 'strong', 'very_strong'])
-  // @Transform(({ value }) => value?.toUpperCase())
   @IsString()
+  @Transform(({ value }) => value || '')
   smell: string;
 
   @IsString()
@@ -15,6 +15,7 @@ export class CreateFlowerDto {
   flowerSize: string;
 
   @IsString()
+  @Transform(({ value }) => value || '')
   height: string;
 
   @IsString()
@@ -22,8 +23,10 @@ export class CreateFlowerDto {
   imgUrl?: string;
 
   @IsString()
+  @IsNotEmpty()
   price: string;
 
   @IsString()
+  @IsNotEmpty()
   categoryId: string;
 }

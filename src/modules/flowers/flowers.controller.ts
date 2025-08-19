@@ -54,28 +54,12 @@ export class FlowersController {
   @UseInterceptors(FileInterceptor('image', { storage }))
   async create(
     @Body() createFlowerDto: CreateFlowerDto,
-    @UploadedFile() file: Express.Multer.File
+    @UploadedFile() file: Express.Multer.File,
   ) {
-    // console.log('=== CREATE FLOWER DEBUG ===');
-    // console.log('Raw request body keys:', Object.keys(createFlowerDto || {}));
-    // console.log('Received file:', file);
-    // console.log(
-    //   'File details:',
-    //   file
-    //     ? {
-    //         fieldname: file.fieldname,
-    //         originalname: file.originalname,
-    //         encoding: file.encoding,
-    //         mimetype: file.mimetype,
-    //         size: file.size,
-    //         destination: file.destination,
-    //         filename: file.filename,
-    //         path: file.path,
-    //       }
-    //     : 'NO FILE',
-    // );
-    // console.log('Received DTO:', createFlowerDto);
-    // console.log('=== END DEBUG ===');
+    console.log('=== CREATE FLOWER DEBUG ===');
+    console.log('Received DTO:', createFlowerDto);
+    console.log('Received file:', file ? file.filename : 'NO FILE');
+    console.log('DTO validation result:', createFlowerDto);
 
     if (file) {
       // Save the image url ('images/filename.jpg')
@@ -117,7 +101,7 @@ export class FlowersController {
   @Get('test-like/:flowerId/:userId')
   async testLike(
     @Param('flowerId') flowerId: string,
-    @Param('userId') userId: string
+    @Param('userId') userId: string,
   ) {
     try {
       const result = await this.flowersService.toggleLike(flowerId, userId);
@@ -142,7 +126,7 @@ export class FlowersController {
   // @UseGuards(AuthGuard)
   async toggleLike(
     @Param('id') id: string,
-    @Body() body: { userId: string }
+    @Body() body: { userId: string },
   ): Promise<LikeResponse> {
     try {
       const result = await this.flowersService.toggleLike(id, body.userId);
@@ -172,7 +156,7 @@ export class FlowersController {
   async update(
     @Param('id') id: string,
     @Body() updateFlowerDto: UpdateFlowerDto,
-    @UploadedFile() file: Express.Multer.File
+    @UploadedFile() file: Express.Multer.File,
   ) {
     if (file) {
       updateFlowerDto.imgUrl = `/images/${file.filename}`;
