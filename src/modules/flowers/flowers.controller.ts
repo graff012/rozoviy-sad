@@ -18,6 +18,7 @@ import { RoleGuard } from '../../common/guards/role.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { diskStorage } from 'multer';
 import { extname, join } from 'path';
+import { existsSync, mkdirSync() } from 'fs';
 import { FileInterceptor } from '@nestjs/platform-express';
 
 // Interface for the like response
@@ -30,9 +31,20 @@ interface LikeResponse {
 // Storage configuration
 const storage = diskStorage({
   destination: (req, file, cb) => {
-    // Use process.cwd() to get the project root, not dist folder
     const uploadPath = join(process.cwd(), 'public', 'images');
-    console.log('Upload path:', uploadPath); // Debug log
+    console.log('Upload path:', uploadPath);
+
+    // Create directory if it doesn't exist
+    if (!existsSync(uploadPath)) {
+      try {
+        mkdirSync(uploadPath, { recursive: true });
+        console.log('Created upload directory:', uploadPath);
+      } catch (error) {
+        console.error('Error creating upload directory:', error);
+        return cb(error, uploadPath);
+      }
+    }
+
     cb(null, uploadPath);
   },
   filename: (req, file, cb) => {
@@ -54,7 +66,7 @@ export class FlowersController {
   @UseInterceptors(FileInterceptor('image', { storage }))
   async create(
     @Body() createFlowerDto: CreateFlowerDto,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile() file: Express.Multer.File
   ) {
     console.log('=== CREATE FLOWER DEBUG ===');
     console.log('Received DTO:', createFlowerDto);
@@ -79,7 +91,7 @@ export class FlowersController {
   //   console.log('File exists:', existsSync(imagePath));
   //
   //   if (existsSync(imagePath)) {
-  //     return res.sendFile(imagePath);
+  //     return res.sendFile(imagePath)
   //   } else {
   //     return res.status(404).send('Image not found at: ' + imagePath);
   //   }
@@ -101,7 +113,7 @@ export class FlowersController {
   @Get('test-like/:flowerId/:userId')
   async testLike(
     @Param('flowerId') flowerId: string,
-    @Param('userId') userId: string,
+    @Param('userId') userId: string
   ) {
     try {
       const result = await this.flowersService.toggleLike(flowerId, userId);
@@ -126,7 +138,7 @@ export class FlowersController {
   // @UseGuards(AuthGuard)
   async toggleLike(
     @Param('id') id: string,
-    @Body() body: { userId: string },
+    @Body() body: { userId: string }
   ): Promise<LikeResponse> {
     try {
       const result = await this.flowersService.toggleLike(id, body.userId);
@@ -156,7 +168,7 @@ export class FlowersController {
   async update(
     @Param('id') id: string,
     @Body() updateFlowerDto: UpdateFlowerDto,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile() file: Express.Multer.File
   ) {
     if (file) {
       updateFlowerDto.imgUrl = `/images/${file.filename}`;
