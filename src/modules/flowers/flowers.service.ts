@@ -103,7 +103,7 @@ export class FlowersService {
 
         console.log(
           `Processed flower ${flower.id} - Final img_url:`,
-          processedFlower.img_url,
+          processedFlower.img_url
         );
         return processedFlower;
       });
@@ -146,7 +146,7 @@ export class FlowersService {
     if (updateFlowerDto.price !== undefined)
       updateData.price = updateFlowerDto.price;
     if (updateFlowerDto.imgUrl !== undefined)
-      updateData.imgUrl = updateFlowerDto.img_url;
+      updateData.imgUrl = updateFlowerDto.imgUrl;
     if (updateFlowerDto.categoryId !== undefined)
       updateData.categoryId = updateFlowerDto.categoryId;
 
@@ -183,7 +183,7 @@ export class FlowersService {
 
   async toggleLike(
     flowerId: string,
-    userId: string,
+    userId: string
   ): Promise<ToggleLikeResult> {
     // Check if flower exists
     const flower = await this.prismaService.flower.findUnique({
