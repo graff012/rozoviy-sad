@@ -13,7 +13,7 @@ interface ToggleLikeResult {
 export class FlowersService {
   constructor(
     private readonly prismaService: PrismaService,
-    private readonly s3Service: S3Service
+    private readonly s3Service: S3Service,
   ) {}
 
   async create(createFlowerDto: CreateFlowerDto, file?: Express.Multer.File) {
@@ -50,7 +50,7 @@ export class FlowersService {
     });
 
     // Generate presigned URL for response
-    let imgUrl = null;
+    let imgUrl: string | null = null; // FIX: Explicit type annotation
     if (imgKey) {
       try {
         imgUrl = await this.s3Service.getPresignedUrl(imgKey);
@@ -107,7 +107,7 @@ export class FlowersService {
             } catch (error) {
               console.error(
                 `Failed to generate presigned URL for flower ${flower.id}:`,
-                error
+                error,
               );
               imgUrl = null; // Fallback to null if presigned URL generation fails
             }
@@ -123,7 +123,7 @@ export class FlowersService {
           };
 
           return processedFlower;
-        })
+        }),
       );
 
       return processedFlowers;
@@ -151,7 +151,7 @@ export class FlowersService {
       } catch (error) {
         console.error(
           `Failed to generate presigned URL for flower ${flower.id}:`,
-          error
+          error,
         );
         imgUrl = null;
       }
@@ -168,7 +168,7 @@ export class FlowersService {
   async update(
     id: string,
     updateFlowerDto: UpdateFlowerDto,
-    file?: Express.Multer.File
+    file?: Express.Multer.File,
   ) {
     const existingFlower = await this.prismaService.flower.findUnique({
       where: { id },
@@ -231,7 +231,7 @@ export class FlowersService {
     });
 
     // Generate presigned URL for response
-    let imgUrl = null;
+    let imgUrl: string | null = null; // FIX: Explicit type annotation
     if (imgKey) {
       try {
         imgUrl = await this.s3Service.getPresignedUrl(imgKey);
@@ -283,7 +283,7 @@ export class FlowersService {
 
   async toggleLike(
     flowerId: string,
-    userId: string
+    userId: string,
   ): Promise<ToggleLikeResult> {
     // Check if flower exists
     const flower = await this.prismaService.flower.findUnique({
