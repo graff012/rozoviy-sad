@@ -1,13 +1,8 @@
-import {
-  Injectable,
-  NotFoundException,
-  ConflictException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateFlowerDto } from './dto/create-flower.dto';
 import { UpdateFlowerDto } from './dto/update-flower.dto';
 import { PrismaService } from '../../core/database/prisma.service';
-import { plainToInstance } from 'class-transformer';
-import { Prisma } from '@prisma/client';
+import { S3Service } from 'src/core/storage/s3/s3.service';
 
 interface ToggleLikeResult {
   message: string;
@@ -16,19 +11,35 @@ interface ToggleLikeResult {
 
 @Injectable()
 export class FlowersService {
-  constructor(private readonly prismaService: PrismaService) {}
-  async create(createFlowerDto: CreateFlowerDto) {
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly s3Service: S3Service
+  ) {}
+
+  async create(createFlowerDto: CreateFlowerDto, file?: Express.Multer.File) {
+    let imgUrl: string | null = null;
+
+    // Upload image to S3 if file is provided
+    if (file) {
+      try {
+        imgUrl = await this.s3Service.uploadFile(file, 'flowers');
+        console.log('Image uploaded to S3:', imgUrl);
+      } catch (err) {
+        console.error('Failed to upload image to S3:', err);
+        throw new Error('Failed to upload image to S3');
+      }
+    }
+
     const { categoryId, ...flowerData } = createFlowerDto;
 
     const flower = await this.prismaService.flower.create({
       data: {
         name: flowerData.name,
         smell: flowerData.smell,
-        // prisma user snake case
         flower_size: flowerData.flowerSize,
         height: flowerData.height,
         price: flowerData.price,
-        img_url: flowerData.imgUrl,
+        img_url: imgUrl, // S3 URL or null
         category: {
           connect: { id: categoryId },
         },
@@ -40,7 +51,13 @@ export class FlowersService {
 
     return {
       message: 'Flower added successfully',
-      flower,
+      flower: {
+        ...flower,
+        // Convert to camelCase for frontend
+        flowerSize: flower.flower_size,
+        imgUrl: flower.img_url,
+        categoryId: flower.category?.id,
+      },
     };
   }
 
@@ -70,40 +87,18 @@ export class FlowersService {
         const isLiked = flower.liked_by && flower.liked_by.length > 0;
         const { liked_by, ...flowerData } = flower;
 
-        // Process the image URL
-        let imgUrl = flower.img_url || '';
-
-        // If it's a relative path starting with /images/ or /public/images/
-        if (imgUrl.startsWith('/public/images/')) {
-          imgUrl = imgUrl.replace('/public', ''); // Convert to /images/...
-        } else if (imgUrl.startsWith('/images/')) {
-          // Keep as is, but remove leading slash
-          imgUrl = imgUrl.substring(1);
-        }
-        // If it's just a filename, prepend images/
-        else if (
-          imgUrl &&
-          !imgUrl.includes('/') &&
-          !imgUrl.startsWith('http')
-        ) {
-          imgUrl = `images/${imgUrl}`;
-        }
-
-        // Ensure the path is clean (no double slashes)
-        imgUrl = imgUrl.replace(/([^:]\/)\/+/g, '$1');
-
         const processedFlower = {
           ...flowerData,
           isLiked,
-          // Return the relative path without leading slash
-          img_url: imgUrl || null,
-          // For backward compatibility
-          imgUrl: imgUrl || null,
+          // Convert snake_case to camelCase
+          flowerSize: flower.flower_size,
+          imgUrl: flower.img_url, // S3 URLs are already complete
+          categoryId: flower.category?.id,
         };
 
         console.log(
-          `Processed flower ${flower.id} - Final img_url:`,
-          processedFlower.img_url
+          `Processed flower ${flower.id} - imgUrl:`,
+          processedFlower.imgUrl
         );
         return processedFlower;
       });
@@ -118,67 +113,128 @@ export class FlowersService {
   async findOne(id: string) {
     const flower = await this.prismaService.flower.findUnique({
       where: { id },
-    });
-
-    if (!flower) throw new NotFoundException('flower not found');
-
-    return flower;
-  }
-
-  async update(id: string, updateFlowerDto: UpdateFlowerDto) {
-    const flower = await this.prismaService.flower.findUnique({
-      where: { id },
+      include: {
+        category: true,
+      },
     });
 
     if (!flower) throw new NotFoundException('Flower not found');
 
-    // Convert DTO to database fields
-    const updateData: any = {};
+    return {
+      ...flower,
+      flowerSize: flower.flower_size,
+      imgUrl: flower.img_url,
+      categoryId: flower.category?.id,
+    };
+  }
 
-    if (updateFlowerDto.name !== undefined)
-      updateData.name = updateFlowerDto.name;
-    if (updateFlowerDto.smell !== undefined)
-      updateData.smell = updateFlowerDto.smell;
-    if (updateFlowerDto.flowerSize !== undefined)
-      updateData.flower_size = updateFlowerDto.flowerSize;
-    if (updateFlowerDto.height !== undefined)
-      updateData.height = updateFlowerDto.height;
-    if (updateFlowerDto.price !== undefined)
-      updateData.price = updateFlowerDto.price;
-    if (updateFlowerDto.imgUrl !== undefined)
-      updateData.imgUrl = updateFlowerDto.imgUrl;
-    if (updateFlowerDto.categoryId !== undefined)
-      updateData.categoryId = updateFlowerDto.categoryId;
-
-    // Always update the updated_at timestamp
-    updateData.updated_at = new Date();
-
-    const updatedFlower = await this.prismaService.flower.update({
+  async update(
+    id: string,
+    updateFlowerDto: UpdateFlowerDto,
+    file?: Express.Multer.File
+  ) {
+    const existingFlower = await this.prismaService.flower.findUnique({
       where: { id },
-      data: updateData,
     });
 
-    return plainToInstance(UpdateFlowerDto, updatedFlower);
+    if (!existingFlower) throw new NotFoundException('Flower not found');
+
+    let imgUrl = existingFlower.img_url;
+
+    // Handle new image upload
+    if (file) {
+      try {
+        // Upload new image to S3
+        imgUrl = await this.s3Service.uploadFile(file, 'flowers');
+        console.log('New image uploaded to S3:', imgUrl);
+
+        // Delete old image from S3 if it exists and is an S3 URL
+        if (
+          existingFlower.img_url &&
+          this.s3Service.isS3Url(existingFlower.img_url)
+        ) {
+          try {
+            await this.s3Service.deleteFile(existingFlower.img_url);
+            console.log('Old image deleted from S3:', existingFlower.img_url);
+          } catch (deleteError) {
+            console.error('Failed to delete old S3 image:', deleteError);
+            // Continue with update even if deletion fails
+          }
+        }
+      } catch (err) {
+        console.error('Failed to upload new image to S3:', err);
+        throw new Error('Failed to upload image to S3');
+      }
+    }
+
+    const { categoryId, ...flowerData } = updateFlowerDto;
+
+    const updateData: any = {
+      img_url: imgUrl,
+    };
+
+    // Only update fields that are provided
+    if (flowerData.name !== undefined) updateData.name = flowerData.name;
+    if (flowerData.smell !== undefined) updateData.smell = flowerData.smell;
+    if (flowerData.flowerSize !== undefined)
+      updateData.flower_size = flowerData.flowerSize;
+    if (flowerData.height !== undefined) updateData.height = flowerData.height;
+    if (flowerData.price !== undefined) updateData.price = flowerData.price;
+
+    // Handle category update
+    if (categoryId) {
+      updateData.category = {
+        connect: { id: categoryId },
+      };
+    }
+
+    const flower = await this.prismaService.flower.update({
+      where: { id },
+      data: updateData,
+      include: {
+        category: true,
+      },
+    });
+
+    return {
+      message: 'Flower updated successfully',
+      flower: {
+        ...flower,
+        flowerSize: flower.flower_size,
+        imgUrl: flower.img_url,
+        categoryId: flower.category?.id,
+      },
+    };
   }
 
   async remove(id: string) {
-    try {
-      const deletedFlower = await this.prismaService.flower.delete({
-        where: { id },
-      });
+    // Get the flower to delete its image from S3
+    const flower = await this.prismaService.flower.findUnique({
+      where: { id },
+    });
 
-      return {
-        message: 'Flower deleted successfully',
-        deletedFlower,
-      };
-    } catch (err) {
-      if (
-        err instanceof Prisma.PrismaClientKnownRequestError &&
-        err.code === 'P2025'
-      ) {
-        throw new NotFoundException('Flower not found');
+    if (!flower) {
+      throw new NotFoundException(`Flower with ID ${id} not found`);
+    }
+
+    // Delete image from S3 if it exists
+    if (flower.img_url && this.s3Service.isS3Url(flower.img_url)) {
+      try {
+        await this.s3Service.deleteFile(flower.img_url);
+        console.log('Image deleted from S3:', flower.img_url);
+      } catch (error) {
+        console.error('Failed to delete image from S3:', error);
+        // Continue with database deletion even if S3 deletion fails
       }
     }
+
+    await this.prismaService.flower.delete({
+      where: { id },
+    });
+
+    return {
+      message: 'Flower deleted successfully',
+    };
   }
 
   async toggleLike(
@@ -241,6 +297,16 @@ export class FlowersService {
         message: 'Successfully liked the flower',
         isLiked: true,
       };
+    }
+  }
+
+  // Helper method for direct S3 upload (used in upload-image endpoint)
+  async uploadImageToS3(file: Express.Multer.File): Promise<string> {
+    try {
+      return await this.s3Service.uploadFile(file, 'flowers');
+    } catch (error) {
+      console.error('Failed to upload image to S3:', error);
+      throw new Error('Failed to upload image to S3');
     }
   }
 }

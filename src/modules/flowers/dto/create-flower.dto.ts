@@ -1,4 +1,4 @@
-import { IsEnum, IsOptional, IsString, IsNotEmpty } from 'class-validator';
+import { IsString, IsNotEmpty } from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export class CreateFlowerDto {
@@ -19,14 +19,12 @@ export class CreateFlowerDto {
   height: string;
 
   @IsString()
-  @IsOptional()
-  imgUrl?: string;
-
-  @IsString()
   @IsNotEmpty()
   price: string;
 
   @IsString()
   @IsNotEmpty()
   categoryId: string;
+
+  // No imgUrl field - images come only from file uploads
 }
