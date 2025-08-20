@@ -18,6 +18,7 @@ import { RoleGuard } from '../../common/guards/role.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ImageValidationPipe } from '../../common/pipes/image-validation.pipe';
+import { memoryStorage } from 'multer';
 
 // Interface for the like response
 interface LikeResponse {
@@ -33,7 +34,12 @@ export class FlowersController {
   @UseGuards(AuthGuard, RoleGuard)
   @Roles('admin')
   @Post('create')
-  @UseInterceptors(FileInterceptor('image')) // No storage config - using memory storage for S3
+  @UseInterceptors(
+    FileInterceptor('image', {
+      storage: memoryStorage(),
+      limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
+    })
+  ) // No storage config - using memory storage for S3
   async create(
     @Body() createFlowerDto: CreateFlowerDto,
     @UploadedFile(ImageValidationPipe) file?: Express.Multer.File
@@ -48,7 +54,12 @@ export class FlowersController {
   }
 
   @Post('debug-upload')
-  @UseInterceptors(FileInterceptor('image'))
+  @UseInterceptors(
+    FileInterceptor('image', {
+      storage: memoryStorage(),
+      limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
+    })
+  )
   debugUpload(@UploadedFile() file: Express.Multer.File) {
     return {
       originalName: file.originalname,
@@ -98,7 +109,12 @@ export class FlowersController {
   @UseGuards(AuthGuard, RoleGuard)
   @Roles('admin')
   @Put(':id')
-  @UseInterceptors(FileInterceptor('image')) // No storage config - using memory storage for S3
+  @UseInterceptors(
+    FileInterceptor('image', {
+      storage: memoryStorage(),
+      limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
+    })
+  ) // No storage config - using memory storage for S3
   async update(
     @Param('id') id: string,
     @Body() updateFlowerDto: UpdateFlowerDto,
@@ -133,7 +149,12 @@ export class FlowersController {
   @UseGuards(AuthGuard, RoleGuard)
   @Roles('admin')
   @Post('upload-image')
-  @UseInterceptors(FileInterceptor('image'))
+  @UseInterceptors(
+    FileInterceptor('image', {
+      storage: memoryStorage(),
+      limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
+    })
+  )
   async uploadImage(
     @UploadedFile(ImageValidationPipe) file: Express.Multer.File
   ) {
