@@ -43,7 +43,7 @@ export class FlowersController {
         validators: [
           new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }), // 10MB
           new FileTypeValidator({
-            fileType: 'image/jpeg|image/jpg|image/png|image/webp',
+            fileType: /^image\/(jpeg|jpg|png|webp)$/,
           }),
         ],
         fileIsRequired: false,
@@ -109,7 +109,7 @@ export class FlowersController {
         validators: [
           new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }), // 10MB
           new FileTypeValidator({
-            fileType: 'image/jpeg|image/jpg|image/png|image/webp',
+            fileType: /^image\/(jpeg|jpg|png|webp)$/,
           }),
         ],
         fileIsRequired: false, // Make file optional
@@ -153,7 +153,7 @@ export class FlowersController {
         validators: [
           new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }), // 10MB
           new FileTypeValidator({
-            fileType: 'image/jpeg|image/jpg|image/png|image/webp',
+            fileType: /^image\/(jpeg|jpg|png|webp)$/,
           }),
         ],
         fileIsRequired: true,
