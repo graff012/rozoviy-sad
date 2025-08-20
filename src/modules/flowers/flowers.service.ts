@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateFlowerDto } from './dto/create-flower.dto';
 import { UpdateFlowerDto } from './dto/update-flower.dto';
 import { PrismaService } from '../../core/database/prisma.service';
-import { S3Service } from 'src/core/storage/s3/s3.service';
+import { S3Service } from '../../core/storage/s3/s3.service';
 
 interface ToggleLikeResult {
   message: string;
