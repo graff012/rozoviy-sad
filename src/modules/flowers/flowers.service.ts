@@ -17,13 +17,13 @@ export class FlowersService {
   ) {}
 
   async create(createFlowerDto: CreateFlowerDto, file?: Express.Multer.File) {
-    let imgUrl: string | null = null;
+    let imgKey: string | null = null; // Change from imgUrl to imgKey
 
     // Upload image to S3 if file is provided
     if (file) {
       try {
-        imgUrl = await this.s3Service.uploadFile(file, 'flowers');
-        console.log('Image uploaded to S3:', imgUrl);
+        imgKey = await this.s3Service.uploadFile(file, 'flowers'); // This now returns S3 key
+        console.log('Image uploaded to S3 with key:', imgKey);
       } catch (err) {
         console.error('Failed to upload image to S3:', err);
         throw new Error('Failed to upload image to S3');
@@ -39,7 +39,7 @@ export class FlowersService {
         flower_size: flowerData.flowerSize,
         height: flowerData.height,
         price: flowerData.price,
-        img_url: imgUrl, // S3 URL or null
+        img_url: imgKey, // Store S3 key, not full URL
         category: {
           connect: { id: categoryId },
         },
@@ -49,13 +49,23 @@ export class FlowersService {
       },
     });
 
+    // Generate presigned URL for response
+    let imgUrl = null;
+    if (imgKey) {
+      try {
+        imgUrl = await this.s3Service.getPresignedUrl(imgKey);
+      } catch (error) {
+        console.error('Failed to generate presigned URL:', error);
+      }
+    }
+
     return {
       message: 'Flower added successfully',
       flower: {
         ...flower,
         // Convert to camelCase for frontend
         flowerSize: flower.flower_size,
-        imgUrl: flower.img_url,
+        imgUrl, // Return presigned URL
         categoryId: flower.category?.id,
       },
     };
@@ -82,26 +92,39 @@ export class FlowersService {
         return [];
       }
 
-      // Process each flower
-      const processedFlowers = flowers.map((flower) => {
-        const isLiked = flower.liked_by && flower.liked_by.length > 0;
-        const { liked_by, ...flowerData } = flower;
+      // Process each flower and generate presigned URLs
+      const processedFlowers = await Promise.all(
+        flowers.map(async (flower) => {
+          const isLiked = flower.liked_by && flower.liked_by.length > 0;
+          const { liked_by, ...flowerData } = flower;
 
-        const processedFlower = {
-          ...flowerData,
-          isLiked,
-          // Convert snake_case to camelCase
-          flowerSize: flower.flower_size,
-          imgUrl: flower.img_url, // S3 URLs are already complete
-          categoryId: flower.category?.id,
-        };
+          // Generate presigned URL if img_url exists and is an S3 key
+          let imgUrl = flower.img_url;
+          if (flower.img_url && !this.s3Service.isS3Url(flower.img_url)) {
+            // If it's an S3 key (not a full URL), generate presigned URL
+            try {
+              imgUrl = await this.s3Service.getPresignedUrl(flower.img_url);
+            } catch (error) {
+              console.error(
+                `Failed to generate presigned URL for flower ${flower.id}:`,
+                error
+              );
+              imgUrl = null; // Fallback to null if presigned URL generation fails
+            }
+          }
 
-        console.log(
-          `Processed flower ${flower.id} - imgUrl:`,
-          processedFlower.imgUrl
-        );
-        return processedFlower;
-      });
+          const processedFlower = {
+            ...flowerData,
+            isLiked,
+            // Convert snake_case to camelCase
+            flowerSize: flower.flower_size,
+            imgUrl, // This will be either a presigned URL or the original URL
+            categoryId: flower.category?.id,
+          };
+
+          return processedFlower;
+        })
+      );
 
       return processedFlowers;
     } catch (error) {
@@ -120,10 +143,24 @@ export class FlowersService {
 
     if (!flower) throw new NotFoundException('Flower not found');
 
+    // Generate presigned URL if needed
+    let imgUrl = flower.img_url;
+    if (flower.img_url && !this.s3Service.isS3Url(flower.img_url)) {
+      try {
+        imgUrl = await this.s3Service.getPresignedUrl(flower.img_url);
+      } catch (error) {
+        console.error(
+          `Failed to generate presigned URL for flower ${flower.id}:`,
+          error
+        );
+        imgUrl = null;
+      }
+    }
+
     return {
       ...flower,
       flowerSize: flower.flower_size,
-      imgUrl: flower.img_url,
+      imgUrl,
       categoryId: flower.category?.id,
     };
   }
@@ -139,20 +176,17 @@ export class FlowersService {
 
     if (!existingFlower) throw new NotFoundException('Flower not found');
 
-    let imgUrl = existingFlower.img_url;
+    let imgKey = existingFlower.img_url; // Keep existing S3 key
 
     // Handle new image upload
     if (file) {
       try {
-        // Upload new image to S3
-        imgUrl = await this.s3Service.uploadFile(file, 'flowers');
-        console.log('New image uploaded to S3:', imgUrl);
+        // Upload new image to S3 (returns S3 key)
+        imgKey = await this.s3Service.uploadFile(file, 'flowers');
+        console.log('New image uploaded to S3 with key:', imgKey);
 
-        // Delete old image from S3 if it exists and is an S3 URL
-        if (
-          existingFlower.img_url &&
-          this.s3Service.isS3Url(existingFlower.img_url)
-        ) {
+        // Delete old image from S3 if it exists
+        if (existingFlower.img_url) {
           try {
             await this.s3Service.deleteFile(existingFlower.img_url);
             console.log('Old image deleted from S3:', existingFlower.img_url);
@@ -170,7 +204,7 @@ export class FlowersService {
     const { categoryId, ...flowerData } = updateFlowerDto;
 
     const updateData: any = {
-      img_url: imgUrl,
+      img_url: imgKey, // Store S3 key
     };
 
     // Only update fields that are provided
@@ -196,12 +230,22 @@ export class FlowersService {
       },
     });
 
+    // Generate presigned URL for response
+    let imgUrl = null;
+    if (imgKey) {
+      try {
+        imgUrl = await this.s3Service.getPresignedUrl(imgKey);
+      } catch (error) {
+        console.error('Failed to generate presigned URL:', error);
+      }
+    }
+
     return {
       message: 'Flower updated successfully',
       flower: {
         ...flower,
         flowerSize: flower.flower_size,
-        imgUrl: flower.img_url,
+        imgUrl, // Return presigned URL
         categoryId: flower.category?.id,
       },
     };
@@ -218,7 +262,7 @@ export class FlowersService {
     }
 
     // Delete image from S3 if it exists
-    if (flower.img_url && this.s3Service.isS3Url(flower.img_url)) {
+    if (flower.img_url) {
       try {
         await this.s3Service.deleteFile(flower.img_url);
         console.log('Image deleted from S3:', flower.img_url);

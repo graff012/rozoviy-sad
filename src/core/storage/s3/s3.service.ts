@@ -2,7 +2,9 @@ import {
   PutObjectCommand,
   S3Client,
   DeleteObjectCommand,
+  GetObjectCommand,
 } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { v4 as uuid } from 'uuid';
@@ -56,29 +58,57 @@ export class S3Service {
       Key: fileName,
       Body: file.buffer,
       ContentType: file.mimetype,
-      // Make the file publicly readable
-      ACL: 'public-read',
+      // Don't set ACL - files will be private by default
     });
 
     try {
       await this.s3Client.send(command);
 
-      // Return the full S3 URL
-      const fileUrl = `https://${this.bucketName}.s3.${this.region}.amazonaws.com/${fileName}`;
-      console.log('File uploaded successfully:', fileUrl);
-      return fileUrl;
+      // Generate a presigned URL that expires in 7 days (adjust as needed)
+      const presignedUrl = await this.getPresignedUrl(fileName);
+
+      console.log('File uploaded successfully:', fileName);
+      console.log('Presigned URL generated:', presignedUrl);
+
+      // Return the S3 key (filename) instead of direct URL
+      // We'll generate presigned URLs when needed
+      return fileName; // Return just the key
     } catch (error) {
       console.error('Error uploading file to S3:', error);
       throw new Error('Failed to upload file to S3');
     }
   }
 
-  async deleteFile(fileUrl: string): Promise<void> {
+  // Generate presigned URL for accessing private files
+  async getPresignedUrl(
+    key: string,
+    expiresIn: number = 7 * 24 * 60 * 60
+  ): Promise<string> {
+    const command = new GetObjectCommand({
+      Bucket: this.bucketName,
+      Key: key,
+    });
+
     try {
-      // Extract the key from the S3 URL
-      const key = this.extractKeyFromUrl(fileUrl);
+      const presignedUrl = await getSignedUrl(this.s3Client, command, {
+        expiresIn, // 7 days by default
+      });
+      return presignedUrl;
+    } catch (error) {
+      console.error('Error generating presigned URL:', error);
+      throw new Error('Failed to generate presigned URL');
+    }
+  }
+
+  async deleteFile(fileKey: string): Promise<void> {
+    try {
+      // If it's a full URL, extract the key
+      const key = this.isS3Url(fileKey)
+        ? this.extractKeyFromUrl(fileKey)
+        : fileKey;
+
       if (!key) {
-        console.warn('Could not extract key from URL:', fileUrl);
+        console.warn('Could not extract key from:', fileKey);
         return;
       }
 
@@ -97,19 +127,24 @@ export class S3Service {
 
   private extractKeyFromUrl(url: string): string | null {
     try {
-      // Extract key from S3 URL format: https://bucket.s3.region.amazonaws.com/key
-      const urlParts = url.split(
-        `https://${this.bucketName}.s3.${this.region}.amazonaws.com/`
-      );
-      return urlParts.length > 1 ? urlParts[1] : null;
+      // Handle both direct S3 URLs and presigned URLs
+      if (url.includes('amazonaws.com')) {
+        const urlObj = new URL(url);
+        const pathname = urlObj.pathname;
+        return pathname.startsWith('/') ? pathname.substring(1) : pathname;
+      }
+      return null;
     } catch (error) {
       console.error('Error extracting key from URL:', error);
       return null;
     }
   }
 
-  // Helper method to check if URL is an S3 URL
+  // Helper method to check if string is an S3 URL
   isS3Url(url: string): boolean {
-    return url.includes(`${this.bucketName}.s3.${this.region}.amazonaws.com`);
+    return (
+      url.includes('amazonaws.com') &&
+      (url.includes('s3.') || url.includes('s3-'))
+    );
   }
 }
