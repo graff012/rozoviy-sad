@@ -38,11 +38,11 @@ export class FlowersController {
     FileInterceptor('image', {
       storage: memoryStorage(),
       limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
-    })
+    }),
   ) // No storage config - using memory storage for S3
   async create(
     @Body() createFlowerDto: CreateFlowerDto,
-    @UploadedFile(ImageValidationPipe) file?: Express.Multer.File
+    @UploadedFile(ImageValidationPipe) file?: Express.Multer.File,
   ) {
     try {
       const result = await this.flowersService.create(createFlowerDto, file);
@@ -58,7 +58,7 @@ export class FlowersController {
     FileInterceptor('image', {
       storage: memoryStorage(),
       limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
-    })
+    }),
   )
   debugUpload(@UploadedFile() file: Express.Multer.File) {
     return {
@@ -83,7 +83,7 @@ export class FlowersController {
   @Post(':id/like')
   async toggleLike(
     @Param('id') id: string,
-    @Body() body: { userId: string }
+    @Body() body: { userId: string },
   ): Promise<LikeResponse> {
     try {
       const result = await this.flowersService.toggleLike(id, body.userId);
@@ -113,18 +113,18 @@ export class FlowersController {
     FileInterceptor('image', {
       storage: memoryStorage(),
       limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
-    })
+    }),
   ) // No storage config - using memory storage for S3
   async update(
     @Param('id') id: string,
     @Body() updateFlowerDto: UpdateFlowerDto,
-    @UploadedFile(ImageValidationPipe) file?: Express.Multer.File
+    @UploadedFile(ImageValidationPipe) file?: Express.Multer.File,
   ) {
     try {
       const result = await this.flowersService.update(
         id,
         updateFlowerDto,
-        file
+        file,
       );
       return result;
     } catch (err) {
@@ -153,10 +153,10 @@ export class FlowersController {
     FileInterceptor('image', {
       storage: memoryStorage(),
       limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
-    })
+    }),
   )
   async uploadImage(
-    @UploadedFile(ImageValidationPipe) file: Express.Multer.File
+    @UploadedFile(ImageValidationPipe) file: Express.Multer.File,
   ) {
     try {
       // Direct S3 upload test

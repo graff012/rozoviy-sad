@@ -25,6 +25,4 @@ export class CreateFlowerDto {
   @IsString()
   @IsNotEmpty()
   categoryId: string;
-
-  // No imgUrl field - images come only from file uploads
 }
