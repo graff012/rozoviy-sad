@@ -9,9 +9,6 @@ import {
   Put,
   UseInterceptors,
   UploadedFile,
-  ParseFilePipe,
-  MaxFileSizeValidator,
-  FileTypeValidator,
 } from '@nestjs/common';
 import { FlowersService } from './flowers.service';
 import { CreateFlowerDto } from './dto/create-flower.dto';
@@ -20,6 +17,7 @@ import { AuthGuard } from '../../common/guards/auth.guard';
 import { RoleGuard } from '../../common/guards/role.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { ImageValidationPipe } from '../../common/pipes/image-validation.pipe';
 
 // Interface for the like response
 interface LikeResponse {
@@ -38,18 +36,7 @@ export class FlowersController {
   @UseInterceptors(FileInterceptor('image')) // No storage config - using memory storage for S3
   async create(
     @Body() createFlowerDto: CreateFlowerDto,
-    @UploadedFile(
-      new ParseFilePipe({
-        validators: [
-          new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }), // 10MB
-          new FileTypeValidator({
-            fileType: 'image/(jpeg|jpg|png|webp)',
-          }),
-        ],
-        fileIsRequired: false,
-      })
-    )
-    file?: Express.Multer.File
+    @UploadedFile(ImageValidationPipe) file?: Express.Multer.File
   ) {
     try {
       const result = await this.flowersService.create(createFlowerDto, file);
@@ -115,18 +102,7 @@ export class FlowersController {
   async update(
     @Param('id') id: string,
     @Body() updateFlowerDto: UpdateFlowerDto,
-    @UploadedFile(
-      new ParseFilePipe({
-        validators: [
-          new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }), // 10MB
-          new FileTypeValidator({
-            fileType: 'image/(jpeg|jpg|png|webp)',
-          }),
-        ],
-        fileIsRequired: false, // Make file optional
-      })
-    )
-    file?: Express.Multer.File
+    @UploadedFile(ImageValidationPipe) file?: Express.Multer.File
   ) {
     try {
       const result = await this.flowersService.update(
@@ -159,18 +135,7 @@ export class FlowersController {
   @Post('upload-image')
   @UseInterceptors(FileInterceptor('image'))
   async uploadImage(
-    @UploadedFile(
-      new ParseFilePipe({
-        validators: [
-          new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }), // 10MB
-          new FileTypeValidator({
-            fileType: 'image/(jpeg|jpg|png|webp)',
-          }),
-        ],
-        fileIsRequired: true,
-      })
-    )
-    file: Express.Multer.File
+    @UploadedFile(ImageValidationPipe) file: Express.Multer.File
   ) {
     try {
       // Direct S3 upload test
