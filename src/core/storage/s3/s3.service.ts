@@ -19,6 +19,17 @@ export class S3Service {
       'AWS_S3_BUCKET_NAME'
     ) as string;
 
+    console.log('🔧 S3 Config:', {
+      region: this.region,
+      bucketName: this.bucketName,
+      accessKeyId: this.configService.get('AWS_S3_ACCESS_KEY_ID')
+        ? '✅ set'
+        : '❌ missing',
+      secretAccessKey: this.configService.get('AWS_S3_SECRET_ACCESS_KEY')
+        ? '✅ set'
+        : '❌ missing',
+    });
+
     this.s3Client = new S3Client({
       region: this.region,
       credentials: {
