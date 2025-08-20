@@ -41,13 +41,15 @@ export class FlowersController {
     @UploadedFile(
       new ParseFilePipe({
         validators: [
-          new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }), //5MB
-          new FileTypeValidator({ fileType: /^image\/(jpeg|jpg|png|webp)$/ }),
+          new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }), // 10MB
+          new FileTypeValidator({
+            fileType: 'image/jpeg|image/jpg|image/png|image/webp',
+          }),
         ],
         fileIsRequired: false,
-      }),
+      })
     )
-    file?: Express.Multer.File,
+    file?: Express.Multer.File
   ) {
     try {
       const result = await this.flowersService.create(createFlowerDto, file);
@@ -72,7 +74,7 @@ export class FlowersController {
   @Post(':id/like')
   async toggleLike(
     @Param('id') id: string,
-    @Body() body: { userId: string },
+    @Body() body: { userId: string }
   ): Promise<LikeResponse> {
     try {
       const result = await this.flowersService.toggleLike(id, body.userId);
@@ -105,19 +107,21 @@ export class FlowersController {
     @UploadedFile(
       new ParseFilePipe({
         validators: [
-          new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }), // 5MB
-          new FileTypeValidator({ fileType: /^image\/(jpeg|jpg|png|webp)$/ }),
+          new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }), // 10MB
+          new FileTypeValidator({
+            fileType: 'image/jpeg|image/jpg|image/png|image/webp',
+          }),
         ],
         fileIsRequired: false, // Make file optional
-      }),
+      })
     )
-    file?: Express.Multer.File,
+    file?: Express.Multer.File
   ) {
     try {
       const result = await this.flowersService.update(
         id,
         updateFlowerDto,
-        file,
+        file
       );
       return result;
     } catch (err) {
@@ -147,13 +151,15 @@ export class FlowersController {
     @UploadedFile(
       new ParseFilePipe({
         validators: [
-          new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }), // 5MB
-          new FileTypeValidator({ fileType: /^image\/(jpeg|jpg|png|webp)$/ }),
+          new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }), // 10MB
+          new FileTypeValidator({
+            fileType: 'image/jpeg|image/jpg|image/png|image/webp',
+          }),
         ],
         fileIsRequired: true,
-      }),
+      })
     )
-    file: Express.Multer.File,
+    file: Express.Multer.File
   ) {
     try {
       // Direct S3 upload test
