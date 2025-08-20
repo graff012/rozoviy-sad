@@ -43,7 +43,7 @@ export class FlowersController {
         validators: [
           new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }), // 10MB
           new FileTypeValidator({
-            fileType: /^image\/(jpeg|jpg|png|webp)$/,
+            fileType: 'image/(jpeg|jpg|png|webp)',
           }),
         ],
         fileIsRequired: false,
@@ -58,6 +58,17 @@ export class FlowersController {
       console.error('Error creating flower:', err);
       throw err;
     }
+  }
+
+  @Post('debug-upload')
+  @UseInterceptors(FileInterceptor('image'))
+  debugUpload(@UploadedFile() file: Express.Multer.File) {
+    return {
+      originalName: file.originalname,
+      mimetype: file.mimetype,
+      size: file.size,
+      bufferLength: file.buffer?.length,
+    };
   }
 
   @Get()
@@ -109,7 +120,7 @@ export class FlowersController {
         validators: [
           new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }), // 10MB
           new FileTypeValidator({
-            fileType: /^image\/(jpeg|jpg|png|webp)$/,
+            fileType: 'image/(jpeg|jpg|png|webp)',
           }),
         ],
         fileIsRequired: false, // Make file optional
@@ -153,7 +164,7 @@ export class FlowersController {
         validators: [
           new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }), // 10MB
           new FileTypeValidator({
-            fileType: /^image\/(jpeg|jpg|png|webp)$/,
+            fileType: 'image/(jpeg|jpg|png|webp)',
           }),
         ],
         fileIsRequired: true,
