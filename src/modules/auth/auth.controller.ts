@@ -40,15 +40,15 @@ export class AuthController {
   @Post('login')
   async login(
     @Body() loginDto: LoginDto,
-    @Res({ passthrough: true }) response: Response
+    @Res({ passthrough: true }) response: Response,
   ) {
     const { token, message } = await this.authService.login(loginDto);
 
     response.cookie('token', token, {
       httpOnly: true,
       secure: true,
-      sameSite: 'none',
-      maxAge: 1000 * 60 * 60,
+      sameSite: 'lax',
+      maxAge: 1000 * 60 * 60 * 24, // 24 hour
     });
 
     return {

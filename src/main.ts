@@ -14,6 +14,7 @@ async function bootstrap() {
   app.enableCors({
     origin: ['https://rozoviysad.vercel.app', 'https://rozoviysad.duckdns.org'],
     credentials: true,
+    optionsSuccessStatus: 200,
   });
 
   // Ensure images directory exists
