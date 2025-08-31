@@ -66,6 +66,6 @@ export class AuthController {
       sameSite: 'strict',
     });
 
-    return { message: 'Successfully logged out' };
+    return { message: 'Successfully logged Out' };
   }
 }
