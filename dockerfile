@@ -25,7 +25,7 @@ FROM node:22-alpine AS runner
 
 WORKDIR /app
 
-# Install runtime deps only (no devDeps)
+# Install only runtime deps
 COPY package*.json yarn.lock ./
 RUN yarn install --frozen-lockfile --production && yarn cache clean
 
