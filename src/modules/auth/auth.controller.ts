@@ -49,6 +49,7 @@ export class AuthController {
       secure: true,
       sameSite: 'lax',
       maxAge: 1000 * 60 * 60 * 24, // 24 hour
+      path: '/',
     });
 
     return {
