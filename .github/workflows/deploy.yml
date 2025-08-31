@@ -3,10 +3,18 @@ on:
   push:
     branches:
       - main
+
 jobs:
   deployment:
     runs-on: ubuntu-latest
     steps:
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+
       - name: Deploy to EC2
         env:
           SERVER_HOST: ${{ secrets.SERVER_HOST }}
@@ -77,6 +85,6 @@ jobs:
           cd /home/ubuntu/app
           sudo docker compose up -d --build
           '
-          
+
       - name: Clean up SSH key
         run: rm -f ~/.ssh/id_rsa
