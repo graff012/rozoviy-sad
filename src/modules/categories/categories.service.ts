@@ -31,7 +31,7 @@ export class CategoriesService {
       where: { id },
     });
 
-    if (!category) throw new NotFoundException('category not found');
+    if (!category) throw new NotFoundException('Category not found');
 
     return { category };
   }
