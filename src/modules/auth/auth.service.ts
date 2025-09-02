@@ -2,13 +2,12 @@ import {
   ConflictException,
   Injectable,
   NotFoundException,
-  InternalServerErrorException,
 } from '@nestjs/common';
 import { LoginDto, RegisterDto } from './dto/create-auth.dto';
 import { PrismaService } from '../../core/database/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import bcrypt from 'bcrypt';
-import { OtpService } from './otp.service';
+// import { OtpService } from './otp.service';
 // import { VerifyOtpDto } from './dto/verify-otp.dto';
 // import { LoginPhoneAndPasswordDto } from './dto/login-phone-password.dto';
 // import { LoginPhoneNumberDto } from './dto/login-phone-number.dto';
@@ -17,8 +16,7 @@ import { OtpService } from './otp.service';
 export class AuthService {
   constructor(
     private readonly prismaService: PrismaService,
-    private readonly jwtService: JwtService,
-    private readonly otpService: OtpService,
+    private readonly jwtService: JwtService
   ) {}
 
   async register(registerDto: RegisterDto) {
@@ -86,7 +84,7 @@ export class AuthService {
 
     const isPasswordValid = await bcrypt.compare(
       loginDto.password,
-      user.password,
+      user.password
     );
     if (!isPasswordValid) throw new ConflictException('Invalid password');
 

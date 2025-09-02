@@ -1,15 +1,6 @@
 import { AuthService } from './auth.service';
-import {
-  Body,
-  Controller,
-  Get,
-  Post,
-  Req,
-  Res,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { LoginDto, RegisterDto } from './dto/create-auth.dto';
-import { Request, Response } from 'express';
 import { Public } from '../../common/decorators/public.decorator';
 import { AuthGuard } from './../../common/guards/auth.guard';
 
@@ -38,34 +29,14 @@ export class AuthController {
   // }
 
   @Post('login')
-  async login(
-    @Body() loginDto: LoginDto,
-    @Res({ passthrough: true }) response: Response,
-  ) {
+  async login(@Body() loginDto: LoginDto) {
     const { token, message } = await this.authService.login(loginDto);
-
-    response.cookie('token', token, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'lax',
-      maxAge: 1000 * 60 * 60 * 24, // 24 hour
-      path: '/',
-    });
-
-    return {
-      message,
-      token,
-    };
+    return { message, token };
   }
 
   @Post('logout')
-  logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
-    res.clearCookie('token', {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'strict',
-    });
-
-    return { message: 'Successfully logged Out' };
+  logout() {
+    // Stateless JWT: client should discard token
+    return { message: 'Successfully logged out' };
   }
 }

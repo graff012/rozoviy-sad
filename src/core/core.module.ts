@@ -18,7 +18,7 @@ import { StorageModule } from './storage/storage.module';
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
         secret: configService.get('JWT_KEY'),
-        sigOptions: {
+        signOptions: {
           expiresIn: '1h',
         },
       }),

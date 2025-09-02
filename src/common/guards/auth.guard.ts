@@ -17,7 +17,6 @@ interface AuthUser {
 }
 
 interface getRequest extends Request {
-  cookies: { token: string };
   userId?: string;
   role?: string;
   user?: AuthUser;
@@ -40,9 +39,14 @@ export class AuthGuard implements CanActivate {
     if (isPublic) return true;
 
     const request = context.switchToHttp().getRequest<getRequest>();
-    const { token } = request.cookies;
 
-    if (!token) throw new ForbiddenException('No token in cookie');
+    // Expect Authorization: Bearer <token>
+    const authHeader = (request as any).headers?.authorization || '';
+    const [scheme, token] = authHeader.split(' ');
+
+    if (!token || (scheme || '').toLowerCase() !== 'bearer') {
+      throw new ForbiddenException('Missing or invalid Authorization header');
+    }
 
     try {
       const payload = await this.jwtService.verifyAsync<{
