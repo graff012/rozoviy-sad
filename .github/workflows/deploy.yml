@@ -64,8 +64,12 @@ jobs:
           AWS_S3_SECRET_ACCESS_KEY=$AWS_S3_SECRET_ACCESS_KEY
           EOF
           
-          # Deploy via SSH
-          ssh -o StrictHostKeyChecking=no "$SERVER_USER@$SERVER_HOST" '
+          # Deploy via SSH (with keepalive to avoid Broken pipe during long builds)
+          ssh -o StrictHostKeyChecking=no \
+              -o ServerAliveInterval=30 \
+              -o ServerAliveCountMax=240 \
+              -o TCPKeepAlive=yes \
+              "$SERVER_USER@$SERVER_HOST" '
           set -e
           REPO_DIR=/home/ubuntu/app
           
@@ -77,11 +81,18 @@ jobs:
           git pull origin main
           '
           
-          # Copy .env file to server
-          scp -o StrictHostKeyChecking=no .env "$SERVER_USER@$SERVER_HOST:/home/ubuntu/app/.env"
+          # Copy .env file to server (with keepalive options)
+          scp -o StrictHostKeyChecking=no \
+              -o ServerAliveInterval=30 \
+              -o ServerAliveCountMax=240 \
+              .env "$SERVER_USER@$SERVER_HOST:/home/ubuntu/app/.env"
           
-          # Restart services on server
-          ssh -o StrictHostKeyChecking=no "$SERVER_USER@$SERVER_HOST" '
+          # Restart services on server (keepalive during docker build)
+          ssh -o StrictHostKeyChecking=no \
+              -o ServerAliveInterval=30 \
+              -o ServerAliveCountMax=240 \
+              -o TCPKeepAlive=yes \
+              "$SERVER_USER@$SERVER_HOST" '
           cd /home/ubuntu/app
           sudo docker compose up -d --build
           '
