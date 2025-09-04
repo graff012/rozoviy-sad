@@ -1,10 +1,13 @@
-import { Injectable, NotFoundException, Put } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { PrismaService } from '../../core/database/prisma.service';
 import { plainToInstance } from 'class-transformer';
 import { Prisma } from '@prisma/client';
-import { trace } from 'console';
 
 @Injectable()
 export class OrdersService {
@@ -98,6 +101,8 @@ export class OrdersService {
       ) {
         throw new NotFoundException('order not found');
       }
+
+      throw new BadRequestException(err);
     }
   }
 }
