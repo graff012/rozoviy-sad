@@ -102,7 +102,7 @@ export class OrdersService {
         throw new NotFoundException('order not found');
       }
 
-      throw new BadRequestException(err);
+      console.error(err);
     }
   }
 }
