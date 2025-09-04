@@ -84,7 +84,7 @@ model OrderItem {
   flower_id  String   @map("flowerId") @db.VarChar(250)
   order_id   String   @map("orderId") @db.VarChar(250)
   flower     Flower   @relation(fields: [flower_id], references: [id], name: "flower_order_items")
-  order      Order    @relation(fields: [order_id], references: [id])
+  order      Order    @relation(fields: [order_id], references: [id], onDelete: Cascade)
   created_at DateTime @default(now()) @map("createdAt")
   updated_at DateTime @updatedAt @map("updatedAt")
 
