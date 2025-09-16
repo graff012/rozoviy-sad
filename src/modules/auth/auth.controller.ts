@@ -37,6 +37,6 @@ export class AuthController {
   @Post('logout')
   logout() {
     // Stateless JWT: client should discard token
-    return { message: 'Successfully Logged Out' };
+    return { message: 'Successfully Logged out' };
   }
 }
