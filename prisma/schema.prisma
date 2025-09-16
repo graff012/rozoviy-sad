@@ -44,6 +44,7 @@ model Flower {
   height      String      @db.VarChar(250)
   img_url     String?     @map("imgUrl")
   price       String
+  stock       Int         @default(0)
   category_id String      @map("categoryId") @db.VarChar(250)
   created_at  DateTime    @default(now()) @map("createdAt")
   updated_at  DateTime    @updatedAt @map("updatedAt")

@@ -1,5 +1,5 @@
-import { IsString, IsNotEmpty } from 'class-validator';
-import { Transform } from 'class-transformer';
+import { IsString, IsNotEmpty, IsInt, Min, IsOptional } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
 
 export class CreateFlowerDto {
   @IsString()
@@ -25,4 +25,10 @@ export class CreateFlowerDto {
   @IsString()
   @IsNotEmpty()
   categoryId: string;
+
+  @IsInt()
+  @Min(0)
+  @IsOptional()
+  @Type(() => Number)
+  stock?: number;
 }

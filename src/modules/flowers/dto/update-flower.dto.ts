@@ -1,5 +1,5 @@
-import { IsOptional, IsString } from 'class-validator';
-import { Transform } from 'class-transformer';
+import { IsInt, IsOptional, IsString, Min } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
 
 export class UpdateFlowerDto {
   @IsString()
@@ -29,4 +29,10 @@ export class UpdateFlowerDto {
   @IsString()
   @IsOptional()
   categoryId?: string;
+
+  @IsInt()
+  @Min(0)
+  @IsOptional()
+  @Type(() => Number)
+  stock?: number;
 }
