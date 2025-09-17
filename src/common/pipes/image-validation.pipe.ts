@@ -26,9 +26,10 @@ export class ImageValidationPipe implements PipeTransform {
     'image/webp',
   ];
 
-  transform(file: Express.Multer.File): ValidatedFile {
+  transform(file: Express.Multer.File | undefined | null): ValidatedFile | null {
+    // If no file is provided (e.g., updating without changing the image), allow it
     if (!file) {
-      throw new BadRequestException('File is required.');
+      return null;
     }
 
     if (!file.buffer) {

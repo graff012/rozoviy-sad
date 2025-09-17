@@ -16,7 +16,7 @@ import bcrypt from 'bcrypt';
 export class AuthService {
   constructor(
     private readonly prismaService: PrismaService,
-    private readonly jwtService: JwtService
+    private readonly jwtService: JwtService,
   ) {}
 
   async register(registerDto: RegisterDto) {
@@ -72,7 +72,7 @@ export class AuthService {
       const token = await this.jwtService.signAsync(payload);
 
       return {
-        message: 'Login successful',
+        message: 'Login Successful',
         token,
       };
     }
@@ -84,7 +84,7 @@ export class AuthService {
 
     const isPasswordValid = await bcrypt.compare(
       loginDto.password,
-      user.password
+      user.password,
     );
     if (!isPasswordValid) throw new ConflictException('Invalid password');
 
