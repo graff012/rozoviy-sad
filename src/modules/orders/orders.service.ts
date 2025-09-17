@@ -58,6 +58,9 @@ export class OrdersService {
   async update(id: string, updateOrderDto: UpdateOrderDto) {
     const order = await this.prismaService.order.findUnique({
       where: { id },
+      include: {
+        items: true,
+      },
     });
 
     if (!order) throw new NotFoundException('order not found');
@@ -73,15 +76,57 @@ export class OrdersService {
     if (updateOrderDto.telegram_username !== undefined)
       updateData.telegram_username = updateOrderDto.telegram_username;
 
+    // Handle status changes with inventory impact
+    const newStatus = updateOrderDto.status as
+      | 'pending'
+      | 'paid'
+      | 'cancelled'
+      | undefined;
+
+    if (newStatus && newStatus !== order.status) {
+      // Transition to paid -> decrement stock atomically
+      if (newStatus === 'paid') {
+        await this.prismaService.$transaction(async (tx) => {
+          // For each order item, ensure sufficient stock and decrement
+          for (const item of order.items) {
+            const updated = await tx.flower.updateMany({
+              where: { id: item.flower_id, stock: { gte: item.quantity } },
+              data: { stock: { decrement: item.quantity } },
+            });
+            if (updated.count !== 1) {
+              throw new BadRequestException(
+                `Insufficient stock for one of the items (flowerId=${item.flower_id}).`
+              );
+            }
+          }
+
+          await tx.order.update({
+            where: { id },
+            data: { status: 'paid', updated_at: new Date() },
+          });
+        });
+
+        return { message: 'Order marked as paid' };
+      }
+
+      // Transition to cancelled or pending -> just update status (no stock changes by default)
+      updateData.status = newStatus;
+    }
+
     // Always update the updated_at timestamp
     updateData.updated_at = new Date();
 
     const updateOrder = await this.prismaService.order.update({
       where: { id },
       data: updateData,
+      include: {
+        items: {
+          include: { flower: true },
+        },
+      },
     });
 
-    return plainToInstance(UpdateOrderDto, updateOrder);
+    return updateOrder;
   }
 
   async remove(id: string) {

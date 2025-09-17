@@ -1,4 +1,4 @@
-import { IsOptional, IsString } from 'class-validator';
+import { IsIn, IsOptional, IsString } from 'class-validator';
 
 export class UpdateOrderDto {
   @IsString()
@@ -16,4 +16,9 @@ export class UpdateOrderDto {
   @IsString()
   @IsOptional()
   telegram_username?: string;
+
+  @IsString()
+  @IsOptional()
+  @IsIn(['pending', 'paid', 'cancelled'])
+  status?: 'pending' | 'paid' | 'cancelled';
 }

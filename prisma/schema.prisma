@@ -71,6 +71,7 @@ model Order {
   phone_number      String      @map("phoneNumber") @db.VarChar(250)
   address           String
   telegram_username String
+  status            Status      @default(pending)
   created_at        DateTime    @default(now()) @map("createdAt")
   updated_at        DateTime    @updatedAt @map("updatedAt")
   items             OrderItem[]
@@ -102,4 +103,10 @@ enum Smell {
   AVERAGE
   STRONG
   VERY_STRONG
+}
+
+enum Status {
+  pending
+  paid
+  cancelled
 }

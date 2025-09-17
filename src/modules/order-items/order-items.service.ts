@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateOrderItemDto } from './dto/create-order-item.dto';
 import { UpdateOrderItemDto } from './dto/update-order-item.dto';
 import { PrismaService } from '../../core/database/prisma.service';
@@ -15,40 +11,23 @@ export class OrderItemsService {
 
   async create(createOrderItemDto: CreateOrderItemDto) {
     try {
-      const { flower_id, order_id, quantity, ...orderItemData } =
-        createOrderItemDto;
+      const { flower_id, order_id, ...orderItemData } = createOrderItemDto;
 
-      const result = await this.prismaService.$transaction(async (tx) => {
-        // Atomically decrement stock if sufficient
-        const updated = await tx.flower.updateMany({
-          where: { id: flower_id, stock: { gte: quantity } },
-          data: { stock: { decrement: quantity } },
-        });
-
-        if (updated.count !== 1) {
-          throw new BadRequestException('Insufficient stock for this flower');
-        }
-
-        // Create order item only after successful stock decrement
-        const orderItem = await tx.orderItem.create({
-          data: {
-            ...orderItemData,
-            quantity,
-            flower: { connect: { id: flower_id } },
-            order: { connect: { id: order_id } },
-          },
-          include: {
-            order: true,
-            flower: true,
-          },
-        });
-
-        return orderItem;
+      const orderItem = await this.prismaService.orderItem.create({
+        data: {
+          ...orderItemData,
+          flower: { connect: { id: flower_id } },
+          order: { connect: { id: order_id } },
+        },
+        include: {
+          order: true,
+          flower: true,
+        },
       });
 
       return {
         message: 'Order item created successfully',
-        orderItem: result,
+        orderItem,
       };
     } catch (err) {
       console.error(err);
