@@ -208,13 +208,17 @@ export class FlowersService {
       img_url: imgKey, // Store S3 key
     };
 
-    // Only update fields that are provided
-    if (flowerData.name !== undefined) updateData.name = flowerData.name;
-    if (flowerData.smell !== undefined) updateData.smell = flowerData.smell;
-    if (flowerData.flowerSize !== undefined)
+    // Only update fields that are provided and not empty strings
+    if (flowerData.name !== undefined && flowerData.name !== '')
+      updateData.name = flowerData.name;
+    if (flowerData.smell !== undefined && flowerData.smell !== '')
+      updateData.smell = flowerData.smell;
+    if (flowerData.flowerSize !== undefined && flowerData.flowerSize !== '')
       updateData.flower_size = flowerData.flowerSize;
-    if (flowerData.height !== undefined) updateData.height = flowerData.height;
-    if (flowerData.price !== undefined) updateData.price = flowerData.price;
+    if (flowerData.height !== undefined && flowerData.height !== '')
+      updateData.height = flowerData.height;
+    if (flowerData.price !== undefined && flowerData.price !== '')
+      updateData.price = flowerData.price;
     if (flowerData.stock !== undefined) updateData.stock = flowerData.stock;
 
     // Handle category update
@@ -238,7 +242,7 @@ export class FlowersService {
       try {
         imgUrl = await this.s3Service.getPresignedUrl(imgKey);
       } catch (error) {
-        console.error('Failed to generate presigned URL:', error);
+        console.error('Failed To generate presigned URL:', error);
       }
     }
 
