@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import cookieParser from 'cookie-parser';
+// import cookieParser from 'cookie-parser';
 import { ValidationPipe } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
@@ -9,12 +9,13 @@ import { existsSync, mkdirSync } from 'fs';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-  app.use(cookieParser());
+  // app.use(cookieParser());
 
   app.enableCors({
     origin: ['https://rozoviysad.vercel.app', 'https://rozoviysad.duckdns.org'],
     credentials: true,
     optionsSuccessStatus: 200,
+    allowedHeaders: '*',
   });
 
   // Ensure images directory exists
