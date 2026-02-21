@@ -15,6 +15,7 @@
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "migrate:deploy": "npx prisma migrate deploy",
+    "start:migrate:prod": "yarn run migrate:deploy && yarn run start:prod",
     "start:migrate:deploy": "yarn run migrate deploy && yarn run start:prod",
     "start:prod": "node -r tsconfig-paths/register dist/src/main.js",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
