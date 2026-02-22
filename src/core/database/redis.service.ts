@@ -14,6 +14,7 @@ export class RedisService {
     this.redis = new Redis({
       port: +(process.env.REDIS_PORT as string),
       host: process.env.REDIS_HOST as string,
+      password: process.env.REDIS_PASSWORD as string,
     });
 
     this.redis.on('connect', () => {
