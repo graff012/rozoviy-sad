@@ -1,7 +1,6 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import ENDIPOINTS from '../../common/constants/endpoints';
-import axios from 'axios';
 
 @Injectable()
 export class SmsService {
@@ -22,15 +21,18 @@ export class SmsService {
       formData.set('email', this.email);
       formData.set('password', this.password);
 
-      const {
-        data: {
-          data: { token },
-        },
-      } = await axios.post(url, formData, {
-        headers: {
-          'Content-Type': 'multirpart/form-data',
-        },
+      const response = await fetch(url, {
+        method: 'POST',
+        body: formData,
       });
+
+      if (!response.ok) {
+        throw new Error(`Eskiz token request failed with status ${response.status}`);
+      }
+
+      const {
+        data: { token },
+      } = (await response.json()) as { data: { token: string } };
 
       return token;
     } catch (error) {
@@ -49,13 +51,16 @@ export class SmsService {
     formData.set('message', `Rozoviy sad ilovasiga kirish kodi:${otp}`);
     formData.set('from', '4546');
 
-    const { status } = await axios.post(url, formData, {
+    const response = await fetch(url, {
+      method: 'POST',
+      body: formData,
       headers: {
-        'Content-Type': 'multirpart/from-data',
         Authorization: `Bearer ${token}`,
       },
     });
 
-    if (status !== 200) throw new InternalServerErrorException('Server error');
+    if (!response.ok) {
+      throw new InternalServerErrorException('Server error');
+    }
   }
 }
