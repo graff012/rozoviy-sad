@@ -12,7 +12,11 @@ async function bootstrap() {
   // app.use(cookieParser());
 
   app.enableCors({
-    origin: ['https://rozoviysad.vercel.app', 'https://rozoviysad.duckdns.org'],
+    origin: [
+      'https://rozoviysad.vercel.app',
+      'https://rozoviysad.duckdns.org',
+      'https://rozoviy-sad-production.up.railway.app',
+    ],
     credentials: true,
     optionsSuccessStatus: 200,
     allowedHeaders: '*',
