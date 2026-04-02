@@ -1,8 +1,9 @@
-import { Module, OnModuleInit } from '@nestjs/common';
+import { Global, Module, OnModuleInit } from '@nestjs/common';
 import { PrismaService } from './prisma.service';
 import { RedisService } from './redis.service';
 import bcrypt from 'bcrypt';
 
+@Global()
 @Module({
   providers: [PrismaService, RedisService],
   exports: [PrismaService, RedisService],
