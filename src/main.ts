@@ -17,9 +17,9 @@ async function bootstrap() {
       'https://rozoviysad.duckdns.org',
       'https://rozoviy-sad-production.up.railway.app',
     ],
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
-    optionsSuccessStatus: 200,
-    allowedHeaders: '*',
+    allowedHeaders: 'Content-Type, Accept, Authorization',
   });
 
   // Ensure images directory exists
