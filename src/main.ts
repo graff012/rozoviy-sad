@@ -12,14 +12,10 @@ async function bootstrap() {
   // app.use(cookieParser());
 
   app.enableCors({
-    origin: [
-      'https://rozoviysad.vercel.app',
-      'https://rozoviysad.duckdns.org',
-      'https://rozoviy-sad-production.up.railway.app',
-    ],
+    origin: true, // This automatically reflects the origin of the request (safe with credentials)
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
-    allowedHeaders: 'Content-Type, Accept, Authorization, Cache-Control, X-Requested-With, Pragma, Expires',
+    allowedHeaders: '*', // Allow all headers to stop the "Pragma/Cache-Control" whack-a-mole
   });
 
   // Ensure images directory exists
