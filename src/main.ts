@@ -19,7 +19,7 @@ async function bootstrap() {
     ],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
-    allowedHeaders: 'Content-Type, Accept, Authorization, Cache-Control, X-Requested-With',
+    allowedHeaders: 'Content-Type, Accept, Authorization, Cache-Control, X-Requested-With, Pragma, Expires',
   });
 
   // Ensure images directory exists
