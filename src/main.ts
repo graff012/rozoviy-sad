@@ -9,13 +9,38 @@ import { existsSync, mkdirSync } from 'fs';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
+  const allowedOrigins = new Set([
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    'https://rozoviysad.vercel.app',
+    'https://rozoviysad.duckdns.org',
+    'https://rozoviy-sad-production.up.railway.app',
+  ]);
+
+  const allowedHeaders = [
+    'Content-Type',
+    'Authorization',
+    'Accept',
+    'Origin',
+    'X-Requested-With',
+    'Cache-Control',
+    'Pragma',
+  ];
+
   // app.use(cookieParser());
 
   app.enableCors({
-    origin: true, // This automatically reflects the origin of the request (safe with credentials)
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.has(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error(`CORS blocked for origin: ${origin}`), false);
+    },
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
-    allowedHeaders: '*', // Allow all headers to stop the "Pragma/Cache-Control" whack-a-mole
+    allowedHeaders,
+    optionsSuccessStatus: 204,
   });
 
   // Ensure images directory exists
