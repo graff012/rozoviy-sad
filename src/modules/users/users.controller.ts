@@ -9,6 +9,7 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
+import type { Request } from 'express';
 import { UsersService } from './users.service';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { AuthGuard } from '../../common/guards/auth.guard';
@@ -16,8 +17,7 @@ import { RoleGuard } from '../../common/guards/role.guard';
 import { UpdateUserDto } from './dto/update-user.dto';
 
 interface RequestWithUser extends Request {
-  params: { id: string };
-  role: string;
+  user?: { id: string; role: string };
 }
 
 @Controller('users')
@@ -45,8 +45,8 @@ export class UsersController {
     @Body() data: UpdateUserDto,
     @Req() req: RequestWithUser,
   ) {
-    const isAdmin = req.role === 'admin';
-    const isSelf = req.params.id === id;
+    const isAdmin = req.user?.role === 'admin';
+    const isSelf = req.user?.id === id;
 
     if (!isAdmin && !isSelf) {
       throw new ForbiddenException('You are not allowed to do this');
@@ -58,10 +58,8 @@ export class UsersController {
   @UseGuards(AuthGuard)
   @Delete(':id')
   async deleteUser(@Param('id') id: string, @Req() req: RequestWithUser) {
-    // either admin or user itself can delete their account
-
-    const isAdmin = req.role === 'admin';
-    const isSelf = req.params.id === id;
+    const isAdmin = req.user?.role === 'admin';
+    const isSelf = req.user?.id === id;
 
     if (!isAdmin && !isSelf) {
       throw new ForbiddenException('You are not allowed to do this');

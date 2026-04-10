@@ -1,8 +1,13 @@
 import { AuthService } from './auth.service';
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import type { Request } from 'express';
 import { LoginDto, RegisterDto } from './dto/create-auth.dto';
 import { Public } from '../../common/decorators/public.decorator';
 import { AuthGuard } from './../../common/guards/auth.guard';
+
+interface RequestWithUser extends Request {
+  user?: { id: string; role: string };
+}
 
 @Public()
 @Controller('auth')
@@ -15,6 +20,12 @@ export class AuthController {
     return {
       authenticated: true,
     };
+  }
+
+  @UseGuards(AuthGuard)
+  @Get('me')
+  async getCurrentUser(@Req() req: RequestWithUser) {
+    return await this.authService.getCurrentUser(req.user?.id as string);
   }
 
   @Post('register')

@@ -3,22 +3,43 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { UserDto } from './dto/user.dto';
 import { PrismaService } from '../../core/database/prisma.service';
-import { plainToInstance } from 'class-transformer';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Prisma } from '@prisma/client';
+import bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
   constructor(private readonly prismaService: PrismaService) {}
+
+  private sanitizeUser(user: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    phone_number: string;
+    role: string;
+    address: string | null;
+    created_at: Date;
+    updated_at: Date;
+  }) {
+    return {
+      id: user.id,
+      first_name: user.first_name,
+      last_name: user.last_name,
+      phone_number: user.phone_number,
+      role: user.role,
+      address: user.address,
+      created_at: user.created_at,
+      updated_at: user.updated_at,
+    };
+  }
 
   async getAllUsers() {
     const users = await this.prismaService.user.findMany();
 
     if (!users) return [];
 
-    return plainToInstance(UserDto, users);
+    return users.map((user) => this.sanitizeUser(user));
   }
 
   async getUserById(id: string) {
@@ -28,7 +49,7 @@ export class UsersService {
 
     if (!user) throw new NotFoundException('User not found');
 
-    return plainToInstance(UserDto, user);
+    return this.sanitizeUser(user);
   }
 
   async updateUser(id: string, updateUserDto: UpdateUserDto) {
@@ -51,8 +72,10 @@ export class UsersService {
       updateData.last_name = updateUserDto.last_name;
     if (updateUserDto.phone_number !== undefined)
       updateData.phone_number = updateUserDto.phone_number;
-    if (updateUserDto.password !== undefined)
-      updateData.password = updateUserDto.password;
+    if (updateUserDto.password !== undefined) {
+      const saltRounds = 10;
+      updateData.password = await bcrypt.hash(updateUserDto.password, saltRounds);
+    }
 
     // Always update the updated_at timestamp
     updateData.updated_at = new Date();
@@ -62,7 +85,7 @@ export class UsersService {
       data: updateData,
     });
 
-    return plainToInstance(UpdateUserDto, updatedUser);
+    return this.sanitizeUser(updatedUser);
   }
 
   async remove(id: string) {

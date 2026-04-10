@@ -19,6 +19,48 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
+  private mapUserProfile(user: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    phone_number: string;
+    role: string;
+    address: string | null;
+    created_at: Date;
+    updated_at: Date;
+  }) {
+    return {
+      id: user.id,
+      first_name: user.first_name,
+      last_name: user.last_name,
+      phone_number: user.phone_number,
+      role: user.role,
+      address: user.address,
+      created_at: user.created_at,
+      updated_at: user.updated_at,
+    };
+  }
+
+  async getCurrentUser(userId: string) {
+    const user = await this.prismaService.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        first_name: true,
+        last_name: true,
+        phone_number: true,
+        role: true,
+        address: true,
+        created_at: true,
+        updated_at: true,
+      },
+    });
+
+    if (!user) throw new NotFoundException('User not found');
+
+    return this.mapUserProfile(user);
+  }
+
   async register(registerDto: RegisterDto) {
     if (
       !registerDto.phoneNumber ||
